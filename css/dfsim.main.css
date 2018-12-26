@@ -1,0 +1,147 @@
+
+
+
+
+.root{
+    -fx-font-size: 11pt;
+    -fx-font-family: "Segoe UI";
+    -fx-base: rgb(235, 235, 235);
+    -fx-background: rgb(245, 245, 245);
+}
+
+#quiz-word-list .list-cell {
+    -fx-alignment: CENTER-RIGHT;
+}
+
+.text-input {
+  -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(rgb(220, 220, 220), -9%), rgb(220, 220, 220));
+  -fx-background-insets: 0, 1;
+  -fx-background-radius: 3, 2;
+}
+
+/*
+.button {
+  -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(rgb(90, 90, 90), -9%), rgb(70, 70, 70));
+  -fx-text-fill: white;
+}
+.button:hover{
+  -fx-background-color:rgb(0, 0, 0);
+  -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.4) , 5, 0.0 , 0 , 1 );
+}
+.button:pressed{
+  -fx-background-color:rgb(0, 0, 100);
+}
+*/
+.text-area {
+    -fx-background-color: rgba(53,89,119,0.8);
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .content{
+    -fx-background-color: transparent;
+}
+
+.unrevealed-text {
+  -fx-opacity: 0.5;
+}
+
+.reveal-button:disabled {
+  -fx-opacity: 1.0;
+  -fx-background-color:rgb(190, 190, 190);
+}
+
+.gos-button {
+  -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(rgb(90, 90, 90), -9%), rgb(70, 70, 70));
+  -fx-text-fill: white;
+}
+.gos-button:hover{
+  /*-fx-background-color:rgb(0, 0, 0);*/
+  /*-fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.4) , 5, 0.0 , 0 , 1 );*/
+  -fx-background-color:rgb(90, 90, 90);
+}
+.gos-button:pressed {
+  -fx-background-color:rgb(70, 70, 100);
+}
+
+.gos-toggle-button {
+  -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(rgb(90, 90, 90), -9%), rgb(70, 70, 70));
+  -fx-text-fill: white;
+}
+.gos-toggle-button:hover{
+  /*-fx-background-color:rgb(0, 0, 0);*/
+  /*-fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.4) , 5, 0.0 , 0 , 1 );*/
+  -fx-background-color:rgb(90, 90, 90);
+}
+.gos-toggle-button:pressed {
+  -fx-background-color:rgb(70, 70, 100);
+}
+
+
+.selected-change-vbox
+{
+  -fx-background-color: lightblue;
+  -fx-border-color: blue;
+  -fx-border-insets: 1;
+  -fx-border-width: 1;
+  -fx-border-style: dashed;
+}
+
+.no-change-vbox
+{
+  -fx-border-color: transparent;
+  -fx-border-insets: 1;
+  -fx-border-width: 1;
+}
+
+.combo-box-base  
+{
+  -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(rgb(180, 180, 180), -9%), rgb(180, 180, 180));
+}
+
+.combo-box-base:hover
+{
+  /*-fx-background-color: -fx-hover-base;*/
+  -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(rgb(190, 190, 190), -9%), rgb(190, 190, 190));
+}
+
+.combo-box-base:showing 
+{
+   /*-fx-background-color: -fx-pressed-base;*/
+  -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(rgb(160, 160, 160), -9%), rgb(160, 160, 160));
+}
+.combo-box .list-cell 
+{
+    -fx-background: white;
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-base-color;
+}
+
+.combo-box-popup .list-view .list-cell:filled:hover 
+{
+    -fx-background-color: lightblue;
+    -fx-text-fill: -fx-text-inner-color;
+}
+
+.radio-button { -fx-rotate:180; }
+.radio-button > .text { -fx-rotate: 180; }
+/*
+.text-input {
+  -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
+  -fx-background-insets: 0, 1;
+  -fx-background-radius: 3, 2;
+}*/

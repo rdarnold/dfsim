@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<values>
+    <globalMoveRate>1.0</globalMoveRate>
+    <rainOrigin>0</rainOrigin>
+    <rainRate>0.15</rainRate>
+    <rainSpeedVar>1.0</rainSpeedVar>
+    <movingDotSpeedRate>1.0</movingDotSpeedRate>
+    <movingDotR>120</movingDotR>
+    <movingDotG>42</movingDotG>
+    <movingDotB>42</movingDotB>
+    <movingDotSize>10.0</movingDotSize>
+    <turnSeconds>3</turnSeconds>
+    <gravityRate>1.0</gravityRate>
+    <noGiveSize>false</noGiveSize>
+    <noTakeSize>false</noTakeSize>
+    <gravityRules>0</gravityRules>
+    <armorRules>0</armorRules>
+    <paradigm>0</paradigm>
+</values>

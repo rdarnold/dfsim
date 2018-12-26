@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<people>
+  <person>
+    <name>Borstrom Ragnok</name>
+    <chClassStr>Soldier</chClassStr>
+    <genderStr>Male</genderStr>
+    <str>124</str>
+    <agi>110</agi>
+    <dex>44</dex>
+    <sta>66</sta>
+    <kno>40</kno>
+    <mag>22</mag>
+    <luk>63</luk>
+    <weapon1>Razor Spear</weapon1>
+    <weapon2>N/A</weapon2>
+    <shield>Iron Shield</shield>
+    <armor>Plate Armor</armor>
+    <head>Wooden Hat</head>
+    <acc>---</acc>
+    <crystl>---</crystl>
+    <item>Medical Herb</item>
+    <item>Medical Herb</item>
+    <item>Medical Herb</item>
+    <item>Antidote</item>
+    <item>Antidote</item>
+    <item>Torch</item>
+    <item>Torch</item>
+    <item>Torch</item>
+    <item>Torch</item>
+    <item>Torch</item>
+    <item>Torch</item>
+  </person>
+  <person>
+    <name>Night</name>
+    <chClassStr>Dark Elf</chClassStr>
+    <genderStr>Female</genderStr>
+    <str>58</str>
+    <agi>95</agi>
+    <dex>89</dex>
+    <sta>65</sta>
+    <kno>82</kno>
+    <mag>141</mag>
+    <luk>74</luk>
+    <weapon1>Slender Sword</weapon1>
+    <weapon2>---</weapon2>
+    <shield>N/A</shield>
+    <armor>Chain Skirt</armor>
+    <head>Cloth Hat</head>
+    <acc>---</acc>
+    <crystl>---</crystl>
+  </person>
+</people>

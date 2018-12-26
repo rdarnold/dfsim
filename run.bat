@@ -1,0 +1,1 @@
+java -Dfile.encoding=UTF8 -cp "bin;../ext/*;." dfsim.DfSim

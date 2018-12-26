@@ -1,0 +1,3 @@
+Main-Class: dfsim.DfSim
+Permissions: sandbox
+
