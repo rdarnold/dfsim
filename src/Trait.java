@@ -374,7 +374,7 @@ public enum Trait {
     Apathetic,
     Arbitrary,
     Argumentative,
-    Arrogantt,
+    Arrogant,
     Artificial,
     Asocial,
     Assertive,

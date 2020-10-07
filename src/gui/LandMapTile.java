@@ -325,15 +325,15 @@ public class LandMapTile extends DfSquareTile {
             case Ruin:      setFill(Color.GRAY); setStroke(Color.BLACK); break;
         }
 
-
-        // Let's check region difficulty by color - the lighter it is, the harder
-        // it is.
-        if (getLevel() == 1000) {
-            setFill(Color.RED);
-        }
-        else {
-            int diff = getLevel() / 4;
-            setFill(Color.rgb(diff, diff, diff, 1.0));
+        // Let's check region difficulty by color - the lighter it is, the harder it is.
+        if (Constants.ENABLE_LEVEL_GRAYSCALE == true) {
+            if (getLevel() == 1000) {
+                setFill(Color.RED);
+            }
+            else {
+                int diff = getLevel() / 4;
+                setFill(Color.rgb(diff, diff, diff, 1.0));
+            }
         }
     }
 }

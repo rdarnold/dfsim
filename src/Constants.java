@@ -19,6 +19,13 @@ public final class Constants {
     public static final int BUTTON_WIDTH = 120;
     public static final int NODE_SIZE = 125;
 
+    // Draw the areas in a grayscale based on level so we can easily visualize
+    // what the "level-scape" looks like
+    public static final boolean ENABLE_LEVEL_GRAYSCALE = false;
+
+    // How many ms for screen fades?
+    public static final int FADE_MS = 500;
+
     public static enum Dir {
         NORTH(0), EAST(1), WEST(2), SOUTH(3), NUMDIRS(4), NONE(5);
 
@@ -169,7 +176,9 @@ public final class Constants {
         Nymph,
         Jester,
         Dancer,
-        HalfDragon;
+        HalfDragon,
+        
+        DarkElf;  // Now we start the weird classes
         
         private int _value;
         private static int nextVal = 0;
@@ -197,6 +206,8 @@ public final class Constants {
                     return "Knight-Errant";
                 case HalfDragon:
                     return "Half-Dragon";
+                case DarkElf:
+                    return "Dark Elf";
                 default:
                     return super.toString();
             }

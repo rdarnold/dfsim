@@ -13,6 +13,16 @@ public class LandRegion extends ArrayList<LandMapTile> {
     private int m_nId = currentId;
     private int m_nLevel = 0;
 
+    // This is for assigning levels in the beginning - some regions
+    // are considered fixed and won't be "smoothed" out during the
+    // smoothing process
+    private boolean m_bFixedLevel = false;
+    public boolean isFixedLevel() { return m_bFixedLevel; }
+    public void makeFixedLevel() { m_bFixedLevel = true; }
+
+    private ArrayList<LandRegion> m_alAdjacentRegions;
+    public ArrayList<LandRegion> getAdjacentRegions() { return m_alAdjacentRegions; }
+
     public LandRegion() { 
         init(0);
     }
@@ -43,6 +53,67 @@ public class LandRegion extends ArrayList<LandMapTile> {
         for (LandMapTile tile : this) {
             tile.setLevel(lv);
         }
+    }
+
+    // Generate a list of all the adjacent regions for easy reference
+    public void updateAdjacentRegions() {
+        if (m_alAdjacentRegions == null){
+            m_alAdjacentRegions = new ArrayList<LandRegion>();
+        }
+        m_alAdjacentRegions.clear();
+
+        // So just look through at all the tiles, if it's an edge tile,
+        // check the region of the adjacent tile and add if it's not added already
+        for (LandMapTile tile : this) {
+            if (isEdgeTile(tile) == false) {
+                continue;
+            }
+
+            // Now check all the adjacent regions; if any one of them isn't
+            // this region and isn't already on the list, add it.
+            checkAddAdjacentRegion(tile.getRegionNorth(), m_alAdjacentRegions);
+            checkAddAdjacentRegion(tile.getRegionSouth(), m_alAdjacentRegions);
+            checkAddAdjacentRegion(tile.getRegionEast(), m_alAdjacentRegions);
+            checkAddAdjacentRegion(tile.getRegionWest(), m_alAdjacentRegions);
+        }
+    }
+
+    private void checkAddAdjacentRegion(LandRegion reg, ArrayList<LandRegion> adjList) {
+        if (reg == null) {
+            return;
+        }
+        int regId = reg.getId();
+
+        // If it's us, we can't add it
+        if (regId == this.getId()) {
+            return;
+        }
+        
+        // If it's already on the list we can't add it
+        if (isAdjacentTo(reg) == true) {
+            return;
+        }
+
+        adjList.add(reg);
+    }
+
+    public boolean isAdjacentTo(int regId) {
+        if (m_alAdjacentRegions == null) {
+            return false;
+        }
+        for (LandRegion region : m_alAdjacentRegions) {
+            if (region.getId() == regId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isAdjacentTo(LandRegion reg) {
+        if (reg == null) {
+            return false;
+        }
+        return isAdjacentTo(reg.getId());
     }
 
     public LandMapTile getRandomTile() {

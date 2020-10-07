@@ -20,6 +20,8 @@ public class CharCard {
     private TextArea nameArea;
     private TextArea statArea;
     private TextArea eqArea;
+
+    public double getWidth() { return nameArea.getPrefWidth(); }
     
     public CharCard() { 
         nameArea = new TextArea();

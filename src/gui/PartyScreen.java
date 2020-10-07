@@ -56,6 +56,7 @@ public class PartyScreen extends DfScreen {
     private PartyScreen thisScreen;
     private ArrayList<MovableToggleButton> memberList;
     CharCard card;
+    MovableButton backButton;
 
     public PartyScreen(BorderPane root, int width, int height) {
         super(root, width, height);
@@ -68,7 +69,7 @@ public class PartyScreen extends DfScreen {
         
         getRoot().setStyle("-fx-background-colour: #000000;");
         getUIPane().setStyle("-fx-background-colour: #000000;");
-        getMainPane().setStyle("-fx-background-colour: #000000;");
+        getMainPane().setStyle("-fx-background-colour: #000000;"); 
         //setStyle("-fx-background-colour: #000000;");
 
         // So maybe on the left is the party list, on the right
@@ -76,6 +77,18 @@ public class PartyScreen extends DfScreen {
         card = new CharCard();
         card.addToPane(getUIPane());
         card.moveTo((Constants.BUTTON_WIDTH * 1.5) + 20, 10);
+
+        // Add a back button at least - maybe we want to move this later
+        backButton = new MovableButton("Back");
+        backButton.setPrefWidth(Constants.BUTTON_WIDTH * 0.5);
+        backButton.moveTo((Constants.BUTTON_WIDTH * 1.5) + 30 + card.getWidth(), 10);
+        getUIPane().getChildren().add(backButton);
+        backButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                onBackButtonClicked((MovableButton)event.getSource());
+            }
+        });
     }
 
     @Override
@@ -121,6 +134,10 @@ public class PartyScreen extends DfScreen {
                 DfSim.sim.onLandMapDownArrow();
                 break;*/
         }
+    }
+
+    public void onBackButtonClicked(MovableButton mb) {
+        DfSim.showLastScreen();
     }
 
     public void updateCharCard(Person person) {

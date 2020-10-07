@@ -123,7 +123,7 @@ public class DfSim extends Application {
     protected static FadeTransition fadeOut;
     protected static FadeTransition fadeIn;
     protected static void createFadeIn(DfScreen screen) {
-        fadeIn = new FadeTransition(Duration.millis(1000), screen.getRoot());
+        fadeIn = new FadeTransition(Duration.millis(Constants.FADE_MS), screen.getRoot());
         fadeIn.setToValue(1.0);
         fadeIn.setOnFinished(new EventHandler<ActionEvent>() {
             @Override
@@ -161,7 +161,7 @@ public class DfSim extends Application {
         createFadeIn(screen);
 
         // Fade out from current scene
-        fadeOut = new FadeTransition(Duration.millis(1000), prevScreen.getRoot());
+        fadeOut = new FadeTransition(Duration.millis(Constants.FADE_MS), prevScreen.getRoot());
         //ft.setFromValue(0.0);
         fadeOut.setToValue(0.0);
         fadeOut.play();

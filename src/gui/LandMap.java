@@ -1,16 +1,13 @@
 package dfsim;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
+
+import javax.swing.plaf.synth.Region;
+
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.*;
 
 import dfsim.gui.*;
 
@@ -23,12 +20,12 @@ public class LandMap extends DfSquareMap {
 
     public LandMapEntity avatar;
 
-    LandMapTile startingTownTile = null;
-    LandRegion endRegion = null;
+    LandMapTile m_lmtStartingTownTile = null;
+    LandRegion m_lrEndRegion = null;
     LandRegion getStartingRegion() { 
-        if (startingTownTile == null) 
+        if (m_lmtStartingTownTile == null) 
             return null; 
-        return startingTownTile.getRegion(); 
+        return m_lmtStartingTownTile.getRegion(); 
     }
 
     public enum MapTileType {
@@ -109,10 +106,10 @@ public class LandMap extends DfSquareMap {
 
     public void start() {
         avatar.unrestrictedMoveTo(DfSim.landMapScreen.wid/2, DfSim.landMapScreen.hgt/2);
-        if (startingTownTile == null) {
-            startingTownTile = getRandomPopulatedTile();
+        if (m_lmtStartingTownTile == null) {
+            m_lmtStartingTownTile = getRandomPopulatedTile();
         }
-        startingTownTile.attach(avatar);
+        m_lmtStartingTownTile.attach(avatar);
         centerOnEntity(avatar, false);
     }
 
@@ -907,6 +904,15 @@ public class LandMap extends DfSquareMap {
         }
     }
 
+    public LandRegion getRegionById(int id) {
+        for (LandRegion reg : regions) {
+            if (reg.getId() == id) {
+                return reg;
+            }
+        }
+        return null;
+    }
+
     private void pruneRegions() {
         // If any regions have no tiles left in them, just remove them - this
         // can happen if other regions completely overlap them.
@@ -979,7 +985,8 @@ public class LandMap extends DfSquareMap {
         // But now we slap a region on top of this one just in case it's only like
         // one room or something.
         LandMapTile tile = reg.get(0);
-        endRegion = createLandRegion(tile, 1000);
+        m_lrEndRegion = createLandRegion(tile, 1000);
+        m_lrEndRegion.makeFixedLevel();
 
         // Then we make all bordering regions almost as hard, if they aren't.
         // Nah, for now I won't do that, it's just the master region, could be
@@ -996,7 +1003,7 @@ public class LandMap extends DfSquareMap {
     }
 
     private void generateRegions() {
-        
+
         // Regions should generally stop at mountain ranges, rivers, etc.  But for now
         // they're just random.
 
@@ -1017,29 +1024,36 @@ public class LandMap extends DfSquareMap {
         // to one.  That'll get us more variation too.  Basically all regions'
         // sizes should add up to the total number of tiles in theory.  If they
         // don't, then we still have tiles that aren't assigned.  We'll get within
-        // 1000 tiles of the max, then call that good enough.
+        // 500 tiles of the max, then call that good enough.
         while (numTilesInRegions() + 500 < numTiles) {
             createLandRegion(getRandomTileWithoutRegion());
         }
 
         // Now actually assign our starting town, this region will be starting level,
         // we overwrite whatever region is there already
-        startingTownTile = getRandomPopulatedTile();
-        createLandRegion(startingTownTile, 1);
+        m_lmtStartingTownTile = getRandomPopulatedTile();
+        LandRegion startRegion = createLandRegion(m_lmtStartingTownTile, 1);
+        startRegion.makeFixedLevel();
 
         // Now prune any regions that got eaten up completely by others so we don't
         // have regions with no tiles
         pruneRegions();
+        Utils.log("Regions: " + regions.size());
 
         // Assign the master evil region and its surroundings
         assignEndRegion();
 
-
         // And now we just comb all the tiles until everything is assigned to a region.
-        // Basically for each pass, if a tile is adjacent to a region, add it to that
-        // region.  And keep going until everything is assigned.  This creates some kinda
-        // stratified effects if used on lots of tiles but we should't have more than
-        // 500 tiles unassigned at this point out of 40,000.
+        // Most are already assigned when we created the regions earlier, but we have some
+        // orphan tiles because we stopped creating regions when we were within 500 tiles
+        // of the max.  When we have created enough regions to house tiles within 500 of
+        // the max, we assume we have enough regions then and we don't need to keep creating
+        // more for that last bit.  So we go through them now, and assign those orphan
+        // tiles based on proximity to existing regions.
+        // Basically for each pass, if a tile is not assigned to a region and is
+        // adjacent to a region, add it to that region.  And keep going until everything 
+        // is assigned.  This creates some kinda stratified effects if used on lots of tiles 
+        // but we should't have more than 500 tiles unassigned at this point out of 40,000.
         boolean notFinished = true;
         while (notFinished == true) {
             notFinished = false;
@@ -1049,6 +1063,233 @@ public class LandMap extends DfSquareMap {
                     tile.assignToAdjacentRegion();
                 }
             }
+        }
+
+        // Now we are done creating and pruning regions, so they are fixed (unless we
+        // decide to change something during gameplay).  So, set up all the adjacent
+        // region lists so we don't have to figure this out every time.
+        updateAllAdjacentRegions();
+
+        // Now go through and smooth out region levels appropriately based on a probability
+        // function that is based on the level of adjacent regions.  This gives us a higher
+        // probability that regions near each other gradually increase in level rather than
+        // the player suddenly wandering from a 5th level region into a 650th level region 
+        // and getting instantly slanked.  To keep it interesting, we don't touch our level
+        // 1 region or our level 1000 (master evil / end region).  Also, we choose some
+        // "untouchable" regions at random that do not touch any other region to help with
+        // our smoothing process
+        //setRandomRegionsToFixedLevel();
+
+        // Now create a path from start to end of appropriately scaled leveling.  So 
+        // there is at least one in the game that can be used
+        createLevelingPath();
+    }
+
+    private void createLevelingPath() {
+        ArrayList<LandRegion> path = findPathFrom(getStartingRegion(), m_lrEndRegion, 20);
+
+        if (path == null) {
+            Utils.log("createLevelingPath: Level path creation failed");
+            Utils.log("Remaking world (NOT IMPLEMENTED YET SO YOU ARE SCREWED!  Region levels will vary wildly)");
+            return;
+        }
+
+        // So, now that we have path, it's an ordered list, the first element of which is adjacent
+        // region to the starting region and the last element is the end (level 1000) region.  First
+        // let's just pop off that end region.
+        path.remove(path.size()-1);
+
+        // Now divide by the size to find our level scaling difference.
+        int levelDiff = 1000 / path.size();
+
+        // Now starting from the first element to the last, add levelDiff to each one's level to create a
+        // leveling path from start to end region 
+        int level = 1;
+        for (LandRegion reg : path) {
+            // Make sure this won't be changed by any future manipulation of area levels
+            reg.makeFixedLevel();
+    
+            // Add level diff with a little variation, hopefully it won't stack too much but whatever, the
+            // players will figure out a way to manage at higher levels anyway
+            level += levelDiff;
+            level += Utils.number(-1*(levelDiff/3), levelDiff/3);
+
+            // Can't go beyond 1000
+            if (level > 1000) {
+                level = 1000;
+            }
+
+            reg.setLevel(level);
+        }
+
+        // TODO - Now I have to bulldoze the path so that it's actually possible to go between regions.
+        // When it's not, like a mountain range or deep water is in the way, i need to either break a path
+        // in the mountains, or take the "easy way" and create a dungeon with an exit between the regions.
+        // Preferably i create a dungeon but allow players to break their own paths through the mountains
+        // or build bridges over water with proper tools.
+        //   NOT DONE - create random dungeon with exit that goes out to each region; in such cases,
+        //   monster level randomizes between both regions
+
+        // And log the completion
+        Utils.log("Leveling path created: includes " + path.size() + " regions");
+    }
+
+    private ArrayList<LandRegion> buildOnePath(ArrayList<LandRegion> path, LandRegion current, LandRegion end, int minSteps) {
+        if (current == null || end == null) {
+            return path;
+        }
+
+        ArrayList<LandRegion> adjRegions = current.getAdjacentRegions();
+        if (adjRegions == null) {
+            return path;
+        }
+
+        // Check if end region is in our adjacent regions - if so, we're done, but only
+        // if we have enough steps
+        if (path.size() >= minSteps) {
+            for (LandRegion reg : adjRegions) {
+                if (reg.getId() == end.getId()) {
+                    path.add(end);
+                    return path;
+                }
+            }
+        }
+
+        // Clone it
+        ArrayList<LandRegion> shuffledList = (ArrayList<LandRegion>)adjRegions.clone();
+
+        // Shuffle the clone
+        Collections.shuffle(shuffledList);
+
+        // Go through shuffled list
+        for (LandRegion reg : shuffledList) {
+            // If current path already contains it, don't use it
+            if (path.contains(reg) == true)
+                continue;
+
+            // Don't use it if it's the starting area, obviously
+            if (reg.getId() == getStartingRegion().getId() == true)
+                continue;
+
+            // Also don't use it if it's the end region; we check for that above
+            if (reg.getId() == m_lrEndRegion.getId() == true)
+                continue;
+
+            // OK it's a valid new path, use it
+            path.add(reg);
+            return buildOnePath(path, reg, end, minSteps);
+        }
+
+        // Something went wrong so just return what we have.
+        return path;
+    }
+
+    private ArrayList<LandRegion> findPathFrom(LandRegion start, LandRegion end, int minSteps) {
+        int numTries = 0;
+        int maxTries = 20000; // We'll try a few thousand times.
+
+        ArrayList<LandRegion> path = null;
+        for (numTries = 0; numTries < maxTries; numTries++) {
+            // Find a path from start to end region that is at least minSteps long.
+            path = buildOnePath(new ArrayList<LandRegion>(), start, end, minSteps);
+
+            // Something went wrong, try again
+            if (path == null) {
+                continue;
+            }
+            
+            // Didn't make it to the end, try again
+            if (path.contains(end) == false){
+                path.clear();
+                path = null;
+                continue;
+            }
+
+            // Too short, try again
+            if (path.size() < minSteps) {
+                path.clear();
+                path = null;
+                continue;
+            }
+
+            // We found a good one!
+            break;
+        }
+
+        // Should just be null if something went wrong but we'll check other conditions anyway
+        if (path == null || path.contains(end) == false || path.size() < minSteps) {
+            Utils.log("findPathFrom:  Unable to find " + minSteps + " path from region ID: " + start.getId() + ", Level: " + start.getLevel() + " to " +
+                "region ID: " + end.getId() + ", Level: " + end.getLevel());
+        }
+
+        return path;
+    }
+
+    public void setRandomRegionsToFixedLevel() {
+        // Let's do it as a function of how many regions we have.  In a typical scenario
+        // the way the game was originally set up, we usually have 600+ regions.  Let's
+        // try to make 10% of those fixed.  Then we smooth out all the in betweens.
+        int num = regions.size() / 10;
+        for (int i = 0; i < num; i++) {
+            setRandomRegionToFixedLevel();
+        }
+    }
+
+    public void setRandomRegionToFixedLevel() {
+        // Find a random region in the world that:
+        //   1:  Is not already fixed level
+        //   2:  Is not adjacent to a fixed-level region
+
+        // And make it fixed level.
+        int loopCheck = 0;
+
+        // Set our rules
+        boolean notAdjacent = true;
+        LandRegion reg = null;
+        while (reg == null) {
+            loopCheck++;
+            if (loopCheck > 200) {
+                Utils.log("loopCheck passed 200 tries in setRandomRegionToFixedLevel");
+                // It looped too many times, just let it be adjacent
+                notAdjacent = false;
+            }
+
+            reg = getRandomRegion();
+            if (reg.isFixedLevel() == true) {
+                continue;
+            }
+            if (notAdjacent == true) {
+                ArrayList<LandRegion> regs = reg.getAdjacentRegions();
+                if (regs == null) {
+                    continue;
+                }
+                for (LandRegion adjRegion : regs) {
+                    // Found an adjacent fixed level region; abort!
+                    if (adjRegion.isFixedLevel() == true) {
+                        reg = null;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (reg != null) {
+            reg.makeFixedLevel();
+        }
+    }
+
+    public LandRegion getRandomRegion() {
+        int index = Utils.number(0, regions.size()-1);
+        return regions.get(index);
+    }
+
+    // Each region maintains a list of its own adjacent regions for convenience
+    // We would need to update this if we ever changed the surface area of a region
+    // or removed it
+    public void updateAllAdjacentRegions() {
+        // Go through every region and set/update all of its adjacent regions
+        for (LandRegion reg : regions) {
+            reg.updateAdjacentRegions();
         }
     }
 
