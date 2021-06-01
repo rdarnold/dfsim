@@ -58,12 +58,13 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
+import javafx.scene.shape.*;
 
 import dfsim.gui.*;
 
 public class DfSim extends Application {
-    public static int width = 650;
-    public static int height = 750;
+    public static int width = 800;
+    public static int height = 800;
     public static Stage stage;
 
     // Some statics that people can access from wherever so we don't have to
@@ -89,7 +90,7 @@ public class DfSim extends Application {
         dfsim = this;
         Utils.init();
 
-        // We do this first to load all our XML data and have it ready.
+        // We do this first to load all our XML and image data and have it ready.
         Data.load();
 
         sim = new DfSimulator();

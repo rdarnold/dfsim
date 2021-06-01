@@ -22,6 +22,8 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.ObjectProperty;
 
+import javafx.scene.image.Image;
+
 // For a smooth movement of the screen
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -46,6 +48,11 @@ public abstract class DfSquareMapEntity extends Rectangle {
 
     public int mapX = 0;
     public int mapY = 0;
+
+    // What tile sprite to draw?  If null just draw color
+    protected Image img = null;
+    public void setImage(Image i) { img = i; }
+    public Image getImage() { return img; }
 
     // For movement animation
     private Timeline timeline;

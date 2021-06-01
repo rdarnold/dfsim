@@ -336,4 +336,62 @@ public class LandMapTile extends DfSquareTile {
             }
         }
     }
+
+    public void updateImage() {
+        switch (type) {
+            case Blank:     gs = null; break;
+            case Grass:     gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("grass"); break;
+            case Field:     gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("grass"); break;
+            case Water:     gs = Data.spriteSea; spriteFrameIndex = 14; break;
+            case Sand:      gs = Data.spriteDesert; spriteFrameIndex = 0; break;
+            case Hill:      gs = Data.spriteMtn1; spriteFrameIndex = 0; break;
+            case Mountain:  gs = Data.spriteMtn2; spriteFrameIndex = 0; break;
+            case Forest:    gs = Data.spriteForest; spriteFrameIndex = 0; break;
+            case Swamp:     gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("grass"); break;
+            case Deadlands: gs = Data.spriteDirt; spriteFrameIndex = 0; break;
+            case Village:   gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("village"); break;
+            case Town:      gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("town"); break;
+            case City:      gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("city"); break;
+            case BigCity:   gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("bigcity"); break;
+            case Capital:   gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("capital"); break;
+            case Cave:      gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("cave1"); break;
+            case Mine:      gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("mine1"); break;
+            case Tower:     gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("tower1"); break;
+            case Ruin:      gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("castle1"); break;
+        }
+
+        if (gs != null) {
+            // We'll just draw the grass background behind everything right now.
+            bgrdSprite = Data.spriteOverlandMap;
+            bgrdSpriteFrameIndex = bgrdSprite.getIndexForKey("grass");
+        }
+    }
+
+    public void drawNoGraphics(GraphicsContext gc) {
+        gc.setFill(getFill());
+        gc.fillRect(getX() + map.getXOffset(), getY() + map.getYOffset(), getWidth(), getHeight());
+    }
+
+    public void draw(GraphicsContext gc) {
+        // Only draw if we are visible
+        double drawX = getX() + map.getXOffset();
+        double drawY = getY() + map.getYOffset();
+
+        if (drawX > DfSim.width || drawX < (0 - getWidth()) || drawY > DfSim.height || drawY < (0 - getHeight())) {
+            return;
+        }
+
+        if (Constants.ENABLE_TILE_GRAPHICS == false || gs == null) {
+            drawNoGraphics(gc);
+            return;
+        }
+
+        // If it has a background, draw that first
+        if (bgrdSprite != null) {
+            bgrdSprite.drawFrameByIndex(gc, bgrdSpriteFrameIndex, drawX, drawY, getWidth(), getHeight());
+        }
+
+        //gc.drawImage(img, 10, 10, 50, 50, getX(), getX(), getWidth(), getHeight());
+        gs.drawFrameByIndex(gc, spriteFrameIndex, drawX, drawY, getWidth(), getHeight());
+    }
 }

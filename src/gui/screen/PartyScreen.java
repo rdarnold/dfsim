@@ -47,6 +47,8 @@ import javafx.scene.text.TextAlignment;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.ListProperty;
+import javafx.animation.FadeTransition;
+import javafx.util.Duration;
 
 import dfsim.*;
 import dfsim.gui.*;
@@ -55,8 +57,12 @@ public class PartyScreen extends DfScreen {
 
     private PartyScreen thisScreen;
     private ArrayList<MovableToggleButton> memberList;
+    private ArrayList<ImageView> portraitViewList;
+    private ImageView gifTest;
     CharCard card;
     MovableButton backButton;
+    MovableButton changePartyButton;
+    MovableButton mateButton;
 
     public PartyScreen(BorderPane root, int width, int height) {
         super(root, width, height);
@@ -66,6 +72,8 @@ public class PartyScreen extends DfScreen {
 
     public void init() {
         memberList = new ArrayList<MovableToggleButton>();
+        portraitViewList = new ArrayList<ImageView>();
+        gifTest = new ImageView();
         
         getRoot().setStyle("-fx-background-colour: #000000;");
         getUIPane().setStyle("-fx-background-colour: #000000;");
@@ -76,17 +84,39 @@ public class PartyScreen extends DfScreen {
         // is the card of the currently selected effer.
         card = new CharCard();
         card.addToPane(getUIPane());
-        card.moveTo((Constants.BUTTON_WIDTH * 1.5) + 20, 10);
+        card.moveTo((Constants.BUTTON_WIDTH * 1.5) + 20, 45);
 
-        // Add a back button at least - maybe we want to move this later
-        backButton = new MovableButton("Back");
-        backButton.setPrefWidth(Constants.BUTTON_WIDTH * 0.5);
-        backButton.moveTo((Constants.BUTTON_WIDTH * 1.5) + 30 + card.getWidth(), 10);
+        backButton = new MovableButton("Exit");
+        backButton.setPrefWidth(Constants.BUTTON_WIDTH * 1.5);
+        backButton.moveTo(10, 10);
         getUIPane().getChildren().add(backButton);
         backButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 onBackButtonClicked((MovableButton)event.getSource());
+            }
+        });
+
+        changePartyButton = new MovableButton("Change Party");
+        changePartyButton.setPrefWidth(Constants.BUTTON_WIDTH * 1.5);
+        changePartyButton.moveTo(20 + Constants.BUTTON_WIDTH * 1.5, 10);
+        getUIPane().getChildren().add(changePartyButton);
+        changePartyButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                onChangePartyButtonClicked((MovableButton)event.getSource());
+            }
+        });
+
+        
+        mateButton = new MovableButton("Have Sex");
+        mateButton.setPrefWidth(Constants.BUTTON_WIDTH * 1.5);
+        mateButton.moveTo(30 + (2 * Constants.BUTTON_WIDTH * 1.5), 10);
+        //getUIPane().getChildren().add(mateButton);
+        mateButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                onMateButtonClicked((MovableButton)event.getSource());
             }
         });
     }
@@ -140,7 +170,29 @@ public class PartyScreen extends DfScreen {
         DfSim.showLastScreen();
     }
 
+    public void onChangePartyButtonClicked(MovableButton mb) {
+        Utils.log("Change Party Not Yet Implemented");
+    }
+    
+    public void onMateButtonClicked(MovableButton mb) {
+        //Utils.log("Mate Button Not Yet Implemented");
+        gifTest.setImage(Data.gifs.get(Utils.number(0, Data.gifs.size())));
+        
+        FadeTransition ft = new FadeTransition(Duration.millis(100), this.getRoot());
+        this.setFill(Color.VIOLET);
+        ft.setFromValue(1.0);
+        ft.setToValue(0.3);
+        ft.setCycleCount(14);
+        ft.setAutoReverse(true);
+        ft.play();
+
+        gifTest.setVisible(true);
+        Data.personList.get(1).mated++;
+        card.update();
+    }
+
     public void updateCharCard(Person person) {
+        gifTest.setVisible(false);
         // So maybe name, class, affection, personality just like
         // in the quick cards for hover-over.
         // Then stats in a text area going down the left,
@@ -161,9 +213,26 @@ public class PartyScreen extends DfScreen {
         selectPersonFromToggle(tb);
     }
 
+    public void setupGifTest() {
+        if (Data.gifs == null || Data.gifs.size() <= 0) {
+            return;
+        }
+        gifTest.setFitWidth((Constants.BUTTON_WIDTH * 1.5) * 2.5);
+        gifTest.setPreserveRatio(true);
+        gifTest.setVisible(false);
+        gifTest.setSmooth(true);
+        gifTest.setCache(true);
+        gifTest.setImage(Data.gifs.get(Utils.number(0, Data.gifs.size()-1)));
+        gifTest.setLayoutX(Constants.BUTTON_WIDTH * 1.5 + 20);
+        gifTest.setLayoutY(400);
+    }
+
     public void update() {
+        getUIPane().getChildren().remove(gifTest);
         getUIPane().getChildren().removeAll(memberList);
+        getUIPane().getChildren().removeAll(portraitViewList);
         memberList.clear();
+        portraitViewList.clear();
         
         // Update with current party members.  Create a "party tile"
         // for each member I guess.
@@ -171,7 +240,7 @@ public class PartyScreen extends DfScreen {
         ToggleGroup group = new ToggleGroup();
 
         double x = 10;
-        double y = 10;
+        double y = 45;
         for (Person person : Data.personList) {
             tb = new MovableToggleButton(person.getName());
             tb.setPrefWidth(Constants.BUTTON_WIDTH * 1.5);
@@ -180,6 +249,18 @@ public class PartyScreen extends DfScreen {
             tb.moveTo(x, y);
             y += 35;
             memberList.add(tb);
+
+            ImageView pv = new ImageView();
+            pv.setFitWidth(Constants.BUTTON_WIDTH * 1.5);
+            pv.setPreserveRatio(true);
+            pv.setSmooth(true);
+            pv.setCache(true);
+            pv.setImage(person.getPortraitImage());
+            pv.setLayoutX(x);
+            pv.setLayoutY(y);
+            portraitViewList.add(pv);
+
+            y += Constants.BUTTON_WIDTH * 1.5 + 35;
             tb.setOnMouseClicked(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
@@ -188,8 +269,12 @@ public class PartyScreen extends DfScreen {
             });
         }
         getUIPane().getChildren().addAll(memberList);
+        getUIPane().getChildren().addAll(portraitViewList);
         tb = memberList.get(0);
         tb.setSelected(true);
         selectPersonFromToggle(tb);
+
+        setupGifTest();
+        getUIPane().getChildren().add(gifTest);
     }
 }

@@ -11,6 +11,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.Pane;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+
 import dfsim.*;
 import dfsim.gui.*;
 
@@ -73,7 +76,12 @@ public class CharCard {
         eqArea.setPrefHeight(200);
     }
 
-    public void setPerson(Person person) {
+    public void setPerson(Person p) {
+        person = p;
+        update();
+    }
+
+    public void update() {
         nameArea.setText(person.toStringInfo());
         statArea.setText(person.toStringStats());
         eqArea.setText(person.toStringEq());

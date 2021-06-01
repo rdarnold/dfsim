@@ -26,10 +26,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.TitledPane;
 
-// Graphics stuff that could be moved into a GraphicsUtils file
-import javafx.scene.effect.DropShadow;
-import javafx.scene.paint.Color;
-
 // This is essentially like a static class in C#
 public final class Utils {
     public static Random rand;
@@ -281,20 +277,6 @@ public final class Utils {
             }
             return 0;  
         }  
-    }
-
-    // And some graphic utils, maybe these should be in a separate file like I do with
-    // my C# games.
-    // You use this and call node.setEffect(Utils.createBorderGlow(Color.BLUE));
-    public static DropShadow createBorderGlow(Color color) {
-        int depth = 70;
-        DropShadow borderGlow = new DropShadow();
-        borderGlow.setOffsetY(0f);
-        borderGlow.setOffsetX(0f);
-        borderGlow.setColor(color);
-        borderGlow.setWidth(depth);
-        borderGlow.setHeight(depth);
-        return borderGlow;
     }
     
     public static Tooltip createTooltip(String str) {

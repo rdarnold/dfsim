@@ -15,6 +15,31 @@ public final class Constants {
     public static final long ONE_SECOND_IN_NANOSECONDS = 1000000000;
     
     public static final String RES_LOAD_PATH = "/res/";
+    public static final String FEMALE_PORTRAIT_PATH = RES_LOAD_PATH + "portraits/female/";
+    public static final String MALE_PORTRAIT_PATH = RES_LOAD_PATH + "portraits/male/";
+    public static final String GIF_PATH = RES_LOAD_PATH + "gifs/";
+    public static final String TILES_PATH = RES_LOAD_PATH + "tiles/";
+    public static final String CHAR_SPRITES_PATH = RES_LOAD_PATH + "char_sprites/";
+
+    public static final String FILENAME_CHAR_SPRITE_HERO1 = CHAR_SPRITES_PATH + "hero1.png";
+
+    // The pipoya defines
+    public static final boolean USING_PIPOYA = true;
+
+    public static final String PIPOYA_PATH_MAP = TILES_PATH + "Pipoya RPG World 48x48/";
+    public static final String PIPOYA_PATH_TILES = TILES_PATH + "Pipoya RPG World 48x48/[A]_type3/";
+
+    public static final String PIPOYA_FILENAME_MAP = PIPOYA_PATH_MAP + "pipo-map001.png";
+    public static final String PIPOYA_FILENAME_GRASS = PIPOYA_PATH_TILES + "pipo-map001_at-kusa.png";
+    public static final String PIPOYA_FILENAME_PATH = PIPOYA_PATH_TILES + "pipo-map001_at-miti.png";
+    public static final String PIPOYA_FILENAME_FOREST = PIPOYA_PATH_TILES + "pipo-map001_at-mori.png";
+    public static final String PIPOYA_FILENAME_DESERT = PIPOYA_PATH_TILES + "pipo-map001_at-sabaku.png";
+    public static final String PIPOYA_FILENAME_DIRT = PIPOYA_PATH_TILES + "pipo-map001_at-tuti.png";
+    public static final String PIPOYA_FILENAME_SEA = PIPOYA_PATH_TILES + "pipo-map001_at-umi.png";
+    public static final String PIPOYA_FILENAME_MTN1 = PIPOYA_PATH_TILES + "pipo-map001_at-yama1.png";
+    public static final String PIPOYA_FILENAME_MTN2 = PIPOYA_PATH_TILES + "pipo-map001_at-yama2.png";
+    public static final String PIPOYA_FILENAME_MTN3 = PIPOYA_PATH_TILES + "pipo-map001_at-yama3.png";
+    // End pipoya defines
 
     public static final int BUTTON_WIDTH = 120;
     public static final int NODE_SIZE = 125;
@@ -22,6 +47,13 @@ public final class Constants {
     // Draw the areas in a grayscale based on level so we can easily visualize
     // what the "level-scape" looks like
     public static final boolean ENABLE_LEVEL_GRAYSCALE = false;
+
+    // Enable drawing of the actual graphics rather than just colors
+    public static final boolean ENABLE_TILE_GRAPHICS = true;
+
+    // Number of pixels per tile.  The engine will automatically scale tile images
+    // to this size regardless of what their resolutions are.
+    public static final int BASE_TILE_SIZE = 30;
 
     // How many ms for screen fades?
     public static final int FADE_MS = 500;

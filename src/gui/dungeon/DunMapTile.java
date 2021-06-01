@@ -47,7 +47,7 @@ public class DunMapTile extends DfSquareTile {
 
     public DunMapEntity getContains() { return (DunMapEntity)contains; }
 
-    public static int defSize = 20;
+    public static int defSize = Constants.BASE_TILE_SIZE;
     
     private DunMap.TileType type = DunMap.TileType.Blank;
     private DunMap.TileType prevType = DunMap.TileType.Blank;

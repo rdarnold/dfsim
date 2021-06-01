@@ -9,6 +9,8 @@ import javafx.scene.layout.Pane;
 
 import javafx.beans.property.*;
 
+import javafx.scene.canvas.*;
+
 import dfsim.gui.*;
 
 // So this is meant to be the overland map.
@@ -99,9 +101,15 @@ public class LandMap extends DfSquareMap {
         
         updateDirections();
         randomizeTerrain();
-        updateColors();
+        updateGraphics();
         
         avatar = new LandMapEntity(this);
+        
+        // For now just default to this image
+        // TODO - have to set up the sprite appropriately too
+        // TODO - will need a gamesprite type of class where I can set their 
+        // properties like frames with frame sizes
+        avatar.setImage(Data.spriteHero1);
     }
 
     public void start() {
@@ -119,13 +127,36 @@ public class LandMap extends DfSquareMap {
         return tiles[x][y];
     }
 
-    public void updateColors() {
+    public void updateGraphics() {
         for (LandMapTile tile : tilesArray) {
             tile.updateColor();
+            tile.updateImage();
         }
     }
-    
-    public void addToPane(Pane pane) {
+
+    public void addToCanvas(DfCanvas canvas) {
+        int xShift = 2;
+        int yShift = 2;
+
+        // Add and move them
+        for (int y = 0; y < numYTiles; y++) {
+            for (int x = 0; x < numXTiles; x++) {
+                LandMapTile tile = getAt(x, y);
+                //tile.addToPane(pane);
+
+                double xPos = tile.mapX * (tile.getWidth());
+                double yPos = tile.mapY * (tile.getWidth());
+                xPos += xShift;
+                yPos += yShift;
+                tile.moveTo(xPos, yPos);
+            }
+        }
+        
+        canvas.setLandMap(this);
+        //avatar.addToPane(pane);
+    }
+
+    /*public void addToPane(Pane pane) {
         int xShift = 2;
         int yShift = 2;
 
@@ -144,7 +175,7 @@ public class LandMap extends DfSquareMap {
         }
         
         avatar.addToPane(pane);
-    }
+    }*/
 
     @Override
     protected void updateVisible() {
@@ -1367,5 +1398,15 @@ public class LandMap extends DfSquareMap {
         generateDuns();
         generateRegions();
         setAreaLevels();
+    }
+
+    public void draw(GraphicsContext gc) {
+        // Draw all the visible tiles (tile knows if it's visible or not)
+        for (LandMapTile tile : tilesArray) {
+            tile.draw(gc);
+        }
+
+        // Draw the avatar
+        avatar.draw(gc);
     }
 }

@@ -80,6 +80,8 @@ public class LandMapScreen extends DfScreen {
 
     private MovableButton actionBtn;
 
+    private DfCanvas canvas;
+
     //public TextArea mainTextArea;
 
     public LandMapScreen(BorderPane root, int width, int height) {
@@ -88,7 +90,10 @@ public class LandMapScreen extends DfScreen {
         //hgt = height;
         thisScreen = this;
         landMap = new LandMap();
-        landMap.addToPane(getMainPane());
+        canvas = new DfCanvas(width, height);
+        getMainPane().getChildren().add(canvas);
+        landMap.addToCanvas(canvas);
+        //landMap.addToPane(getMainPane());
         createButtons();
     }
 
@@ -186,6 +191,12 @@ public class LandMapScreen extends DfScreen {
             case DOWN:
                 DfSim.sim.onLandMapDownArrow();
                 break;*/
+        }
+    }
+
+    public void updateOneFrame() {
+        if (canvas != null) {
+            canvas.updateOneFrame();
         }
     }
 }

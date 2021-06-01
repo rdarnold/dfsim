@@ -23,6 +23,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.animation.PathTransition;
 import javafx.util.Duration;
+import javafx.scene.image.Image;
 
 
 import dfsim.*;
@@ -35,7 +36,18 @@ public abstract class DfSquareTile extends Rectangle {
     public void setLevel(int lv) { m_nLevel = lv; }
     public int getLevel() { return m_nLevel; }
 
-    public static int defSize = 20;
+    public static int defSize = Constants.BASE_TILE_SIZE;
+
+    // What tile sprite to draw?  If null just draw color
+    protected GameSprite gs = null;
+    public void setGameSprite(GameSprite i) { gs = i; }
+    public GameSprite getGameSprite() { return gs; }
+    public int spriteFrameIndex = 0; // Index into the sprite sheet in terms of what sprite to actually draw
+
+    protected GameSprite bgrdSprite = null;
+    public void setBackgroundSprite(GameSprite i) { bgrdSprite = i; }
+    public GameSprite getBackgroundSprite() { return gs; }
+    public int bgrdSpriteFrameIndex = 0; // Is there a background sprite to draw for this tile
 
     public int mapX = 0;
     public int mapY = 0;

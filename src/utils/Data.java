@@ -3,6 +3,9 @@ package dfsim;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
+import javafx.scene.image.Image;
+
+import dfsim.gui.*;
 
 // Basically a holder of static data that should be accessible by everyone.
 public final class Data {
@@ -26,11 +29,36 @@ public final class Data {
     public static ArrayList<DfItem> dfItemList;
     public static ArrayList<DfMon> dfMonList;
 
-    //public static Values values;
+    // The game graphics
+    // The base images for portraits
+    public static ArrayList<Image> femalePortraitImages = new ArrayList<Image>();
+    public static ArrayList<Image> malePortraitImages = new ArrayList<Image>();
+    
+    // The game objects themselves which point to the portrait images
+    public static ArrayList<Portrait> femalePortraits = new ArrayList<Portrait>();
+    public static ArrayList<Portrait> malePortraits = new ArrayList<Portrait>();
+
+    public static ArrayList<Image> gifs = new ArrayList<Image>();
+
+    // We'll define some images for the various things that can show on the map
+    public static GameSprite spriteHero1 = null;
+    public static GameSprite spriteOverlandMap = null;
+    public static GameSprite spriteGrass = null;
+    public static GameSprite spritePath = null;
+    public static GameSprite spriteForest = null;
+    public static GameSprite spriteDesert = null;
+    public static GameSprite spriteDirt = null;
+    public static GameSprite spriteSea = null;
+    public static GameSprite spriteMtn1 = null;
+    public static GameSprite spriteMtn2 = null;
+    public static GameSprite spriteMtn3 = null;
 
     private static XmlProcessor xmlProcessor = new XmlProcessor();
 
     public static void load() {
+        // Load graphics first
+        GraphicsLoader.loadImages();
+
         nameListM = new DfNameList();
         nameListF = new DfNameList();
 

@@ -80,6 +80,10 @@ public class DfSimulator {
                 townMapScreen.getTown().updateOneFrame();
             }
         }
+        // The other screens should switch to this paradigm
+        else if (landMapScreen != null) {
+            landMapScreen.updateOneFrame();
+        }
     }
 
     public void initLoop() {

@@ -17,11 +17,12 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.ObjectProperty;
 
+import javafx.scene.image.Image;
+
 public class Person  {
     
     public Person() { 
     }
-
 
     // Conversely I can name them differently fro the ones in the actual
     // XML using the annotation @XmlElement(name="XYZ") where XYZ is the actual
@@ -141,6 +142,12 @@ public class Person  {
         temp += "\r\n";
         temp += chClass.toString() + "\r\n";
         temp += "Level " + getLevel() + "\r\n";
+        if (mated == 1) {
+          temp += "Had sex with Borstrom " + mated + " time\r\n";
+        }
+        else if (mated > 1) {
+          temp += "Had sex with Borstrom " + mated + " times\r\n";
+        }
         return temp;
     }
 
@@ -201,6 +208,48 @@ public class Person  {
       temp += "Crystal  : " + getCrystl();
       return temp;
     }
+
+    public Image getPortraitImage() {
+      if (portrait != null) {
+        return portrait.getImage();
+      }
+
+      // Should we do a generic male/female here?
+      return null;
+    }
+
+    public void setRandomPortrait() {
+      if (isFemale()) {
+        if (GraphicsUtils.femalePortraitsAvailable() == false) {
+          Utils.log("WARNING: Ran out of female portraits!");
+          return;
+        }
+        while (portrait == null) {
+          int n = Utils.number(0, Data.femalePortraits.size()-1);
+          Portrait p = Data.femalePortraits.get(n);
+          if (p.inUse() == false) {
+            p.assignTo(this);
+            portrait = p;
+            break;
+          }
+        }
+      }
+      else {
+        if (GraphicsUtils.femalePortraitsAvailable() == false) {
+          Utils.log("WARNING: Ran out of male portraits!");
+          return;
+        }
+        while (portrait == null) {
+          int n = Utils.number(0, Data.malePortraits.size()-1);
+          Portrait p = Data.malePortraits.get(n);
+          if (p.inUse() == false) {
+            p.assignTo(this);
+            portrait = p;
+            break;
+          }
+        }
+      }
+    }
     
     public void onLoad() {
         String temp;
@@ -236,12 +285,16 @@ public class Person  {
         if (temp != null && temp != "") {
           eqCrystl = Data.getDfEquipCByName(temp);
         }
+
+        setRandomPortrait();
     }
 
     public Constants.CharClass chClass = Constants.CharClass.Villager;
     public Personality personality = null;
     public Constants.Gender gender = Constants.Gender.Male;
     public int affection = 0;
+    public Portrait portrait = null;
+    public int mated = 0;
 
     public boolean met = false; // Show stats or no over hover?  Have we "met" this person
     public void setMet(boolean isMet) { met = isMet; }

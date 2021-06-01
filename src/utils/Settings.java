@@ -5,5 +5,4 @@ public final class Settings {
     private Settings () { // private constructor
     }
 
-    //public static boolean shuffleQuestions = false;
 }

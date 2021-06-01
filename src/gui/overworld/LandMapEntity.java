@@ -27,8 +27,8 @@ import dfsim.gui.*;
 
 public class LandMapEntity extends DfSquareMapEntity {
 
-    public static int defSize = LandMapTile.defSize-4;
-    public static int posOffset = (LandMapTile.defSize - LandMapEntity.defSize) / 2;
+    //public static int defSize = LandMapTile.defSize-4;
+    //public static int posOffset = (LandMapTile.defSize - LandMapEntity.defSize) / 2;
     
     public Person person;
 
@@ -45,6 +45,8 @@ public class LandMapEntity extends DfSquareMapEntity {
 
     public LandMapEntity(LandMap theMap) {
         super(theMap);
+        defSize = LandMapTile.defSize;
+        posOffset = 0;
         init();
     }
 
@@ -202,4 +204,55 @@ public class LandMapEntity extends DfSquareMapEntity {
     public void removeFromPane(Pane node) {
         node.getChildren().remove(this);
     }*/
+
+    public void drawNoGraphics(GraphicsContext gc) {
+        // Only draw if we are visible
+        gc.setFill(getFill());
+        gc.setStroke(getStroke());
+        gc.fillRect(getX(), getY(), getWidth(), getHeight());
+
+        gc.setStroke(getStroke());
+        gc.setLineWidth(getStrokeWidth());
+        gc.strokeRect(getX(), getY(), getWidth(), getHeight());
+        gc.setLineWidth(1);
+    }
+
+    public void draw(GraphicsContext gc) {
+        if (Constants.ENABLE_TILE_GRAPHICS == false || img == null) {
+            drawNoGraphics(gc);
+            return;
+        }
+        
+        /*
+        public void drawImage(Image img,
+                      double sx,
+                      double sy,
+                      double sw,
+                      double sh,
+                      double dx,
+                      double dy,
+                      double dw,
+                      double dh)
+
+        Draws the specified source rectangle of the given image 
+        to the given destination rectangle of the Canvas.
+
+        Parameters:
+        img - the image to be drawn or null.
+        sx - the source rectangle's X coordinate position.
+        sy - the source rectangle's Y coordinate position.
+        sw - the source rectangle's width.
+        sh - the source rectangle's height.
+        dx - the destination rectangle's X coordinate position.
+        dy - the destination rectangle's Y coordinate position.
+        dw - the destination rectangle's width.
+        dh - the destination rectangle's height.
+
+        drawImage(image, 0, 0, w/2, h/2, w/4, h/4, w/2, h/2
+        );
+        */
+
+        // For now just hacking the numbers in
+        gc.drawImage(img, 10, 10, 50, 50, getX(), getX(), getWidth(), getHeight());
+    }
 }

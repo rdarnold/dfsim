@@ -22,7 +22,7 @@ import javafx.event.EventHandler;
 
 import dfsim.gui.*;
 
-// So this is meant to be the overland map.
+// Any square map - overland, dungeon, town.
 public abstract class DfSquareMap {
 
     // For movement animation
@@ -45,6 +45,9 @@ public abstract class DfSquareMap {
     // then bind their translations to this one.
     protected final IntegerProperty xOffset = new SimpleIntegerProperty(0);
     protected final IntegerProperty yOffset = new SimpleIntegerProperty(0);
+
+    public int getXOffset() { return xOffset.get(); }
+    public int getYOffset() { return yOffset.get(); }
 
     protected Pane pane;
 

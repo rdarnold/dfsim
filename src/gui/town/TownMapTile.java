@@ -47,7 +47,7 @@ public class TownMapTile extends DfSquareTile {
 
     public TownMapEntity getContains() { return (TownMapEntity)contains; }
 
-    public static int defSize = 20;
+    public static int defSize = Constants.BASE_TILE_SIZE;
 
     private TownMap.TileType type = TownMap.TileType.Grass;
     private TownMap.TileType prevType = TownMap.TileType.Grass;

@@ -29,6 +29,9 @@ public class MovablePolygon extends Polygon {
     private DoubleProperty size = new SimpleDoubleProperty(maxSize);
     public DoubleProperty sizeProperty() { return size; }
     public double getSize() { return size.get(); }
+    
+    private double m_fRadius = maxSize / 2; 
+    public double getRadius() { return m_fRadius; }
 
     // Min and max size parameters.
     public double getMaxSize() { return maxSize; }
@@ -104,11 +107,11 @@ public class MovablePolygon extends Polygon {
     public double getCenterX() { return m_fCenterX; }
     public double getCenterY() { return m_fCenterY; }
 
-    private double xPoints[];
-    private double yPoints[];
+    //private double xPoints[];
+    //private double yPoints[];
 
-    public double[] getXPoints() { return xPoints; }
-    public double[] getYPoints() { return yPoints; }
+    //public double[] getXPoints() { return xPoints; }
+    //public double[] getYPoints() { return yPoints; }
     
     public double getXPoint(int slot) { return xPoints[slot]; }
     public double getYPoint(int slot) { return yPoints[slot]; }
@@ -118,6 +121,54 @@ public class MovablePolygon extends Polygon {
 
     public void setAngleDegrees(double deg) { m_fAngleInDegrees = deg; }
     public double getAngleDegrees() {return m_fAngleInDegrees; }
+    
+    protected String shapeStr = null;
+    //public Text getShapeText() { return shapeText; }
+    public String getShapeStr() { return shapeStr; }
+    public void setShapeStr(String str) {
+        shapeStr = str;
+    }
+    
+    // For the canvas, the graphicscontext requires xpoints and ypoints and doesn't
+    // just take an array of points like the actual Polygon class, it's so ridiculous
+    // that javafx types don't support each other
+    // Only create these if we need them, and only recreate them if the size is not
+    // correct
+    private double[] xPoints = null;
+    private double[] yPoints = null;
+    public double[] getXPoints() {
+        if (xPoints == null || getNumPoints() != xPoints.length) {
+            xPoints = new double[getNumPoints()];
+        }
+        int num = 0;
+        int index = 0;
+        while (num < xPoints.length) {
+            xPoints[num] = getPoints().get(index);
+            num++;
+            index += 2;
+        }
+        return xPoints;
+    }
+    public double[] getYPoints() {
+        if (yPoints == null || getNumPoints() != yPoints.length) {
+            yPoints = new double[getNumPoints()];
+        }
+        int num = 0;
+        int index = 1;
+        while (num < yPoints.length) {
+            yPoints[num] = getPoints().get(index);
+            num++;
+            index += 2;
+        }
+        return yPoints;
+    }
+    public int getNumPoints() {
+        if (getPoints() == null) {
+            return 0;
+        }
+        // Because getPoints organizes them like x, y, x1, y1, so 2 numbers is 1 point
+        return getPoints().size()/2;
+    }
 
     public MovablePolygon() {    
         super();
@@ -147,6 +198,7 @@ public class MovablePolygon extends Polygon {
 
         shapeText = new Text();
         shapeText.setText(text);
+        shapeStr = text;
 
         // The overlay doesn't call this init function
         overlay = new MovablePolygon(true);
@@ -162,7 +214,7 @@ public class MovablePolygon extends Polygon {
     }
 
     public void deepCopy(MovablePolygon from) {
-        getPoints().clear();
+        clearAll();
         getPoints().addAll(from.getPoints());
         setSize(from.getSize());
         //setColor((Color)from.getFill());
@@ -176,6 +228,12 @@ public class MovablePolygon extends Polygon {
         growthRate = from.growthRate;
         centerOn(from);
     }
+    
+    public void clearAll() {
+        getPoints().clear();
+        xPoints = null;
+        yPoints = null;
+    }
 
     public void centerOn(MovablePolygon from) {
         moveTo(from.getCenterX(), from.getCenterY());
@@ -185,7 +243,7 @@ public class MovablePolygon extends Polygon {
     public Circle getSelectedCircle() { return selectedCircle; }
     public MovablePolygon getSelectedPolygon() { return selectedPolygon; }
     public Text getText() { return shapeText; }
-    public void setText(String text) { shapeText.setText(text); }
+    public void setText(String text) { shapeText.setText(text); shapeStr = text; }
 
     public void matchSpeed(MovablePolygon other) {
         setSpeed(other.getXSpeed(), other.getYSpeed());
