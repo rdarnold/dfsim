@@ -41,6 +41,7 @@ public final class Data {
     public static ArrayList<Image> gifs = new ArrayList<Image>();
 
     // We'll define some images for the various things that can show on the map
+    public static ArrayList<GameSprite> sprites = new ArrayList<GameSprite>(); // Store all sprites in a list
     public static GameSprite spriteHero1 = null;
     public static GameSprite spriteOverlandMap = null;
     public static GameSprite spriteGrass = null;

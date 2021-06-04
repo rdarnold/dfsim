@@ -177,7 +177,7 @@ public class LandMapScreen extends DfScreen {
         }
         switch (key) {
             case ENTER:
-                DfSim.showTownMapScreen();
+                //DfSim.showTownMapScreen();
                 break;
             /*case RIGHT:
                 DfSim.sim.onLandMapRightArrow();

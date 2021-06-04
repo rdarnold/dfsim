@@ -69,6 +69,7 @@ public final class GraphicsLoader {
         try {
             InputStream stream = new FileInputStream(fileNameAndPath);
             GameSprite sprite = new GameSprite(stream);
+            Data.sprites.add(sprite); // Automatically add ref to master list
             return sprite;
         }
         catch (FileNotFoundException e) {
@@ -79,7 +80,7 @@ public final class GraphicsLoader {
 
     public static void loadImages() {
         loadPortraits();
-        // loadGifs(); // Disabled for now just to save time
+        loadGifs(); // Disabled for now just to save time
         loadCharSprites();
         loadTiles();
     }
@@ -107,11 +108,18 @@ public final class GraphicsLoader {
     public static void loadGifs() {
         loadAllImagesFromFolder("." + Constants.GIF_PATH, Data.gifs);
     }
-
+    
     public static void loadTiles() {
         // Load whichever tileset we want to use
         if (Constants.USING_PIPOYA == true) {
             loadPipoyaImages();
+        }
+
+        // Now check all of them for dupes
+        for (GameSprite spr : Data.sprites) {
+            if (spr != null) {
+                spr.hasDuplicateKeys();
+            }
         }
     }
 

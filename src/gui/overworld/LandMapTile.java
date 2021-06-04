@@ -32,6 +32,7 @@ public class LandMapTile extends DfSquareTile {
 
 
     public LandMap.MapTileType type = LandMap.MapTileType.Water;
+    public LandMap.MapTileType getType() { return type; }
 
     /*public LandMapTile north;
     public LandMapTile east;
@@ -337,18 +338,57 @@ public class LandMapTile extends DfSquareTile {
         }
     }
 
+    public boolean sameType(LandMapTile otherTile) {
+        if (otherTile == null) {
+            // If it's a blank tile, assume it's the same type for graphics purposes
+            return true;
+        }
+        return (type == otherTile.getType());
+    }
+
+    public String buildTerrainSpriteKeyStr() {
+        // What this does, is build the string "bitvector" depending on 
+        // what terrain is common to this one and borders it.  Starting
+        // from the north side, we go 8 directions clockwise, like so:
+        // n ne e se s sw w nw
+        // Then we can look up the correct sprite in "any" (hopefully) set
+        // of graphics we load, provided we set the keys correctly there too.
+        LandMapTile nTile = n();
+        LandMapTile eTile = e();
+        LandMapTile sTile = s();
+        LandMapTile wTile = w();
+        LandMapTile neTile = null;
+        LandMapTile nwTile = null;
+        LandMapTile seTile = null;
+        LandMapTile swTile = null;
+
+        if (nTile != null) {
+            neTile = nTile.e();
+            nwTile = nTile.w();
+        }
+        if (sTile != null) {
+            seTile = sTile.e();
+            swTile = sTile.w();
+        }
+
+        String keyStr = "";
+        
+        if (sameType(nTile))  keyStr += "0"; else keyStr += "1";
+        if (sameType(neTile)) keyStr += "0"; else keyStr += "1";
+        if (sameType(eTile))  keyStr += "0"; else keyStr += "1";
+        if (sameType(seTile)) keyStr += "0"; else keyStr += "1";
+        if (sameType(sTile))  keyStr += "0"; else keyStr += "1";
+        if (sameType(swTile)) keyStr += "0"; else keyStr += "1";
+        if (sameType(wTile))  keyStr += "0"; else keyStr += "1";
+        if (sameType(nwTile)) keyStr += "0"; else keyStr += "1";
+
+        return keyStr;
+    }
+
     public void updateImage() {
         switch (type) {
             case Blank:     gs = null; break;
             case Grass:     gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("grass"); break;
-            case Field:     gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("grass"); break;
-            case Water:     gs = Data.spriteSea; spriteFrameIndex = 14; break;
-            case Sand:      gs = Data.spriteDesert; spriteFrameIndex = 0; break;
-            case Hill:      gs = Data.spriteMtn1; spriteFrameIndex = 0; break;
-            case Mountain:  gs = Data.spriteMtn2; spriteFrameIndex = 0; break;
-            case Forest:    gs = Data.spriteForest; spriteFrameIndex = 0; break;
-            case Swamp:     gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("grass"); break;
-            case Deadlands: gs = Data.spriteDirt; spriteFrameIndex = 0; break;
             case Village:   gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("village"); break;
             case Town:      gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("town"); break;
             case City:      gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("city"); break;
@@ -358,6 +398,15 @@ public class LandMapTile extends DfSquareTile {
             case Mine:      gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("mine1"); break;
             case Tower:     gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("tower1"); break;
             case Ruin:      gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("castle1"); break;
+            case Swamp:     gs = Data.spriteOverlandMap; spriteFrameIndex = gs.getIndexForKey("grass"); break;
+            
+            case Field:     gs = Data.spriteGrass;  spriteFrameIndex = gs.getIndexForKey(buildTerrainSpriteKeyStr()); break;
+            case Water:     gs = Data.spriteSea;    spriteFrameIndex = gs.getIndexForKey(buildTerrainSpriteKeyStr()); break;
+            case Sand:      gs = Data.spriteDesert; spriteFrameIndex = gs.getIndexForKey(buildTerrainSpriteKeyStr()); break;
+            case Hill:      gs = Data.spriteMtn1;   spriteFrameIndex = gs.getIndexForKey(buildTerrainSpriteKeyStr()); break;
+            case Mountain:  gs = Data.spriteMtn2;   spriteFrameIndex = gs.getIndexForKey(buildTerrainSpriteKeyStr()); break;
+            case Forest:    gs = Data.spriteForest; spriteFrameIndex = gs.getIndexForKey(buildTerrainSpriteKeyStr()); break;
+            case Deadlands: gs = Data.spriteDirt;   spriteFrameIndex = gs.getIndexForKey(buildTerrainSpriteKeyStr()); break;
         }
 
         if (gs != null) {

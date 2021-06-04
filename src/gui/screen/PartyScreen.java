@@ -112,7 +112,7 @@ public class PartyScreen extends DfScreen {
         mateButton = new MovableButton("Have Sex");
         mateButton.setPrefWidth(Constants.BUTTON_WIDTH * 1.5);
         mateButton.moveTo(30 + (2 * Constants.BUTTON_WIDTH * 1.5), 10);
-        //getUIPane().getChildren().add(mateButton);
+        getUIPane().getChildren().add(mateButton);
         mateButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -176,7 +176,7 @@ public class PartyScreen extends DfScreen {
     
     public void onMateButtonClicked(MovableButton mb) {
         //Utils.log("Mate Button Not Yet Implemented");
-        gifTest.setImage(Data.gifs.get(Utils.number(0, Data.gifs.size())));
+        gifTest.setImage(Data.gifs.get(Utils.number(0, Data.gifs.size()-1)));
         
         FadeTransition ft = new FadeTransition(Duration.millis(100), this.getRoot());
         this.setFill(Color.VIOLET);
