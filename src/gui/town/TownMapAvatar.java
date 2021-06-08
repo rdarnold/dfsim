@@ -37,7 +37,7 @@ public class TownMapAvatar extends TownMapEntity {
         setStrokeWidth(1);
     }
 
-    @Override
+    /*@Override
     protected void handleMouseEnter(Object objEnt, MouseEvent event) {
         if (objEnt == null) 
             return;
@@ -56,5 +56,5 @@ public class TownMapAvatar extends TownMapEntity {
         else {
             getMap().onRightClickAvatar(ent);
         }
-    }
+    }*/
 }

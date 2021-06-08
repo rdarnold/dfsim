@@ -57,6 +57,8 @@ public class DunMapScreen extends DfScreen {
 
     private DunMapScreen thisScreen;
 
+    private DfCanvas canvas;
+
     //private StackPane stackPane;
     //private Pane mainArea;
 
@@ -66,6 +68,8 @@ public class DunMapScreen extends DfScreen {
         super(root, width, height);
         thisScreen = this;
         createButtons();
+        canvas = new DfCanvas(width, height);
+        getMainPane().getChildren().add(canvas);
     }
 
     public void createButtons() {
@@ -113,7 +117,7 @@ public class DunMapScreen extends DfScreen {
         if (DfSim.noInput == true) {
             return;
         }
-        switch (key) {
+        /*switch (key) {
             case RIGHT:
                 dun.onRightArrow();
                 break;
@@ -126,11 +130,12 @@ public class DunMapScreen extends DfScreen {
             case DOWN:
                 dun.onDownArrow();
                 break;
-        }
+        }*/
     }
 
     @Override
     public void processKeyRelease(KeyCode key) {
+        super.processKeyRelease(key);
         if (DfSim.noInput == true) {
             return;
         }
@@ -178,10 +183,45 @@ public class DunMapScreen extends DfScreen {
             newDun.start(dir);
         }
         
-        if (dun != null) {
+        /*if (dun != null) {
             dun.removeFromPane();
-        }
+        }*/
         dun = newDun;
-        dun.addToPane(getMainPane());
+        canvas.setSquareMap(dun);
+        //dun.addToPane(getMainPane());
+    }
+    
+    public void updateInput() {
+        if (DfSim.noInput == true) {
+            return;
+        }
+        if (isArrowRightPressed() == true || isDPressed() == true) {
+            dun.onRightArrow();
+        }
+        if (isArrowLeftPressed() == true || isAPressed() == true) {
+            dun.onLeftArrow();
+        }
+        if (isArrowUpPressed() == true || isWPressed() == true) {
+            dun.onUpArrow();
+        }
+        if (isArrowDownPressed() == true || isSPressed() == true) {
+            dun.onDownArrow();
+        }
+    }
+    
+    public void updateOneFrame() {
+        if (isActive() == false) {
+            return;
+        }
+
+        if (canvas != null) {
+            canvas.updateOneFrame();
+        }
+
+        if (dun != null) {
+            dun.updateOneFrame();
+        }
+
+        updateInput();
     }
 }

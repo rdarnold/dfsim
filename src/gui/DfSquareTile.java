@@ -59,17 +59,28 @@ public abstract class DfSquareTile extends Rectangle {
 
     public DfSquareMapEntity contains;
 
+    // Reference to the base class map used for generic map processing
+    private DfSquareMap baseMap;
+
     private boolean marked = false; // For whatever transient use like searches, generation 
     public void mark() { marked = true; }
     public void clearMark() { marked = false; }
     public boolean isMarked() { return marked; }
 
-    public DfSquareTile() {
+    public DfSquareTile(DfSquareMap theMap) {
         super();
+
+        // We don't want mouse events getting captured by these nodes at all,
+        // they are hand-drawn and the mouse events are interpreted by the canvas
+        // which then figures out what was clicked on.  Shouldn't work like this
+        // anyway because the nodes are not part of the scene graph.  But just in case!
+        setMouseTransparent(true);
+
+        baseMap = theMap;
         setWidth(defSize);
         setHeight(defSize);
         
-        setOnMouseClicked(new EventHandler<MouseEvent>() {
+        /*setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 handleClick(event.getSource(), event);
@@ -81,14 +92,14 @@ public abstract class DfSquareTile extends Rectangle {
             public void handle(MouseEvent event) {
                 handleMouseEnter(event.getSource(), event);
             }
-        });
+        });*/
     }
 
     // Meant to be overridden
-    protected void handleMouseEnter(Object objTile, MouseEvent event) {  }
+    //protected void handleMouseEnter(Object objTile, MouseEvent event) {  }
 
     // Meant to be overridden
-    protected void handleClick(Object objTile, MouseEvent event) { }
+    //protected void handleClick(Object objTile, MouseEvent event) { }
 
     public DfSquareTile getNortheast() {
         if (north != null) { return north.east; }
@@ -139,6 +150,7 @@ public abstract class DfSquareTile extends Rectangle {
         contains = null;
     }
 
+    /*
     public void pullTo(DfSquareMapEntity ent) {
         //int steps = DfSim.mainScene.hexMap.countCurMovPathTiles();
         Path path = new Path();
@@ -165,7 +177,7 @@ public abstract class DfSquareTile extends Rectangle {
         pathTransition.setCycleCount(1);
 
         pathTransition.play();
-    }
+    }*/
 
     public boolean canBeMovedTo() { 
         return canBeMovedTo(null);
@@ -242,5 +254,29 @@ public abstract class DfSquareTile extends Rectangle {
         if (dir1 == -1 || dir2 == -1)
             return false;
         return (revDir(dir1) == dir2);
+    }
+
+    public void drawNoGraphics(GraphicsContext gc) {
+        gc.setFill(getFill());
+        gc.fillRect(getDrawX(), getDrawY(), getWidth(), getHeight()); //getX() + map.getXOffset(), getY() + map.getYOffset(), getWidth(), getHeight());
+    }
+
+    // Where does the tile actually draw on screen?
+    public double getDrawX() {
+        return (getX() + baseMap.getXOffset());
+    } 
+
+    public double getDrawY() {
+        return (getY() + baseMap.getYOffset());
+    } 
+    
+    // Was the tile clicked on?
+    public boolean withinClick(double clickedX, double clickedY) {
+        double leftX = getDrawX();
+        double rightX = getDrawX() + getWidth();
+        double topY = getDrawY();
+        double bottomY = getDrawY() + getHeight();
+
+        return (clickedX >= leftX && clickedX <= rightX && clickedY >= topY && clickedY <= bottomY);
     }
 }

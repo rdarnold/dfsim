@@ -98,6 +98,8 @@ public class LandMap extends DfSquareMap {
                 tilesArray.add(tile);
             }
         }
+        // Set the base class pointer to the tile array
+        super.squareTiles = tiles;
         
         updateDirections();
         randomizeTerrain();
@@ -105,14 +107,13 @@ public class LandMap extends DfSquareMap {
         
         avatar = new LandMapEntity(this);
         
-        // For now just default to this image
-        // TODO - have to set up the sprite appropriately too
-        // TODO - will need a gamesprite type of class where I can set their 
-        // properties like frames with frame sizes
-        avatar.setImage(Data.spriteHero1);
+        // The avatar should use the same image as the town entity, dungeon entity, etc; all
+        // need to point to the same data structure.
+        //avatar.setImage(Data.spriteHero1);
     }
 
     public void start() {
+        avatar.setPerson(Data.personList.get(0));
         avatar.unrestrictedMoveTo(DfSim.landMapScreen.wid/2, DfSim.landMapScreen.hgt/2);
         if (m_lmtStartingTownTile == null) {
             m_lmtStartingTownTile = getRandomPopulatedTile();
@@ -142,8 +143,6 @@ public class LandMap extends DfSquareMap {
         for (int y = 0; y < numYTiles; y++) {
             for (int x = 0; x < numXTiles; x++) {
                 LandMapTile tile = getAt(x, y);
-                //tile.addToPane(pane);
-
                 double xPos = tile.mapX * (tile.getWidth());
                 double yPos = tile.mapY * (tile.getWidth());
                 xPos += xShift;
@@ -152,8 +151,7 @@ public class LandMap extends DfSquareMap {
             }
         }
         
-        canvas.setLandMap(this);
-        //avatar.addToPane(pane);
+        canvas.setSquareMap(this);
     }
 
     /*public void addToPane(Pane pane) {
@@ -198,6 +196,7 @@ public class LandMap extends DfSquareMap {
 
     @Override
     protected void onMoveFinished() {
+        super.onMoveFinished();
         LandMapTile tile = avatar.getTile();
         if (tile.isPopulated()) {
             DfSim.showTownMapScreen(tile, Constants.Dir.revDir(avatar.getLastMoveDir()));
@@ -1400,6 +1399,38 @@ public class LandMap extends DfSquareMap {
         setAreaLevels();
     }
 
+    @Override
+    public void onLeftClick(double x, double y) {
+        LandMapTile tile = (LandMapTile)getTileForClick(x, y);
+        if (tile != null) {
+            onLeftClickTile(tile);
+        }
+    }
+
+    @Override
+    public void onRightClick(double x, double y) {
+        LandMapTile tile = (LandMapTile)getTileForClick(x, y);
+        if (tile != null) {
+            onRightClickTile(tile);
+        }
+    }
+
+    @Override
+    public void onLeftPressed(double x, double y) { }
+
+    @Override
+    public void onRightPressed(double x, double y) { }
+    
+    @Override
+    public void onLeftDragged(double x, double y) { }
+
+    @Override
+    public void onRightDragged(double x, double y) { }
+
+    @Override
+    public void onMouseMove(double x, double y) { }
+
+    @Override
     public void draw(GraphicsContext gc) {
         // Draw all the visible tiles (tile knows if it's visible or not)
         for (LandMapTile tile : tilesArray) {

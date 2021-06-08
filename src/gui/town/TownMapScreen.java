@@ -58,6 +58,8 @@ public class TownMapScreen extends DfScreen {
 
     private TownMapScreen thisScreen;
 
+    private DfCanvas canvas;
+
     //private StackPane stackPane;
     //private Pane mainArea;
 
@@ -69,6 +71,8 @@ public class TownMapScreen extends DfScreen {
         //hgt = height;
         thisScreen = this;
         createButtons();
+        canvas = new DfCanvas(width, height);
+        getMainPane().getChildren().add(canvas);
     }
 
     public void createButtons() {
@@ -122,7 +126,7 @@ public class TownMapScreen extends DfScreen {
         if (DfSim.noInput == true) {
             return;
         }
-        switch (key) {
+        /*switch (key) {
             case RIGHT: town.onRightArrow(); break;
             case LEFT: town.onLeftArrow(); break;
             case UP: town.onUpArrow(); break;
@@ -131,11 +135,12 @@ public class TownMapScreen extends DfScreen {
             case A: town.onA(); break;
             case W: town.onW(); break;
             case S: town.onS(); break;
-        }
+        }*/
     }
 
     @Override
     public void processKeyRelease(KeyCode key) {
+        super.processKeyRelease(key);
         if (DfSim.noInput == true) {
             return;
         }
@@ -171,10 +176,45 @@ public class TownMapScreen extends DfScreen {
             newTown.start(dir);
         }
         
-        if (town != null) {
+        /*if (town != null) {
             town.removeFromPane();
-        }
+        }*/
         town = newTown;
-        town.addToPane(getMainPane());
+        canvas.setSquareMap(town);
+        //town.addToPane(getMainPane());
+    }
+
+    public void updateInput() {
+        if (DfSim.noInput == true) {
+            return;
+        }
+        if (isArrowRightPressed() == true || isDPressed() == true) {
+            town.onRightArrow();
+        }
+        if (isArrowLeftPressed() == true || isAPressed() == true) {
+            town.onLeftArrow();
+        }
+        if (isArrowUpPressed() == true || isWPressed() == true) {
+            town.onUpArrow();
+        }
+        if (isArrowDownPressed() == true || isSPressed() == true) {
+            town.onDownArrow();
+        }
+    }
+    
+    public void updateOneFrame() {
+        if (isActive() == false) {
+            return;
+        }
+
+        if (canvas != null) {
+            canvas.updateOneFrame();
+        }
+
+        if (town != null) {
+            town.updateOneFrame();
+        }
+        
+        updateInput();
     }
 }

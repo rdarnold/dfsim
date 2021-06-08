@@ -49,4 +49,23 @@
     <acc>---</acc>
     <crystl>---</crystl>
   </person>
+  <person>
+    <name>Lily</name>
+    <chClassStr>Princess</chClassStr>
+    <genderStr>Female</genderStr>
+    <str>58</str>
+    <agi>95</agi>
+    <dex>89</dex>
+    <sta>65</sta>
+    <kno>82</kno>
+    <mag>141</mag>
+    <luk>74</luk>
+    <weapon1>Stick</weapon1>
+    <weapon2>---</weapon2>
+    <shield>N/A</shield>
+    <armor>Panties</armor>
+    <head>---</head>
+    <acc>---</acc>
+    <crystl>---</crystl>
+  </person>
 </people>

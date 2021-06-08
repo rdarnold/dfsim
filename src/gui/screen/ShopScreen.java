@@ -77,7 +77,7 @@ public class ShopScreen extends DfScreen {
         //scene.getStylesheets().add(getClass().getResource("css/naru.main.css").toExternalForm());
         getStylesheets().add("css/dfsim.main.css");
 
-        setOnKeyReleased(new EventHandler<KeyEvent>() {
+        /*setOnKeyReleased(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
                 processKeyRelease(keyEvent.getCode());
@@ -88,7 +88,7 @@ public class ShopScreen extends DfScreen {
             public void handle(KeyEvent keyEvent) {
                 processKeyPress(keyEvent.getCode());
             }
-        });
+        });*/
     }
 
     public void createScene() {
@@ -129,6 +129,7 @@ public class ShopScreen extends DfScreen {
     }
 
     public void processKeyRelease(KeyCode key) {
+        super.processKeyRelease(key);
         if (DfSim.noInput == true) {
             return;
         }

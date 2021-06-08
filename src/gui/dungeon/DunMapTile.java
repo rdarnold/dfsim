@@ -75,7 +75,7 @@ public class DunMapTile extends DfSquareTile {
     }
 
     public DunMapTile(DunMap theMap) {
-        super();
+        super(theMap);
         map = theMap;
         init();
     }
@@ -102,7 +102,7 @@ public class DunMapTile extends DfSquareTile {
         updateColor();
     }
 
-    @Override
+    /*@Override
     protected void handleMouseEnter(Object objTile, MouseEvent event) {
         if (objTile == null) 
             return;
@@ -121,7 +121,7 @@ public class DunMapTile extends DfSquareTile {
         else {
             map.onRightClickTile(tile);
         }
-    }
+    }*/
 
     public DunMapTile getAdjacentTileForNumber(int num) {
         return (DunMapTile)super.getAdjacentTileForNumber(num);
@@ -212,5 +212,35 @@ public class DunMapTile extends DfSquareTile {
             case EmptyChest:    setFill(Color.DARKRED); break;
             case Exit:          setFill(Color.YELLOW); break;
         }
+    }
+    
+    public void drawNoGraphics(GraphicsContext gc) {
+        gc.setFill(getFill());
+        gc.fillRect(getX() + map.getXOffset(), getY() + map.getYOffset(), getWidth(), getHeight());
+    }
+
+    public void draw(GraphicsContext gc) {
+        drawNoGraphics(gc);
+
+        // Only draw if we are visible
+        /*double drawX = getX() + map.getXOffset();
+        double drawY = getY() + map.getYOffset();
+
+        if (drawX > DfSim.width || drawX < (0 - getWidth()) || drawY > DfSim.height || drawY < (0 - getHeight())) {
+            return;
+        }
+
+        if (Constants.ENABLE_TILE_GRAPHICS == false || gs == null) {
+            drawNoGraphics(gc);
+            return;
+        }
+
+        // If it has a background, draw that first
+        if (bgrdSprite != null) {
+            bgrdSprite.drawFrameByIndex(gc, bgrdSpriteFrameIndex, drawX, drawY, getWidth(), getHeight());
+        }
+
+        //gc.drawImage(img, 10, 10, 50, 50, getX(), getX(), getWidth(), getHeight());
+        gs.drawFrameByIndex(gc, spriteFrameIndex, drawX, drawY, getWidth(), getHeight());*/
     }
 }

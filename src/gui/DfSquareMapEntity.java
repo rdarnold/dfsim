@@ -1,41 +1,37 @@
 package dfsim.gui;
 
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
+import javafx.scene.canvas.*;
+import javafx.scene.paint.*;
 import javafx.scene.shape.*;
-import java.util.List;
-import javafx.geometry.Point2D;
-import java.util.ArrayList;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.MouseButton;
+import java.util.*;
+import javafx.geometry.*;
+import javafx.scene.input.*;
 import javafx.event.EventHandler;
-import javafx.scene.text.Text;
-import javafx.scene.layout.Pane;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.ObjectProperty;
+import javafx.scene.text.*;
+import javafx.scene.layout.*;
+import javafx.beans.value.*;
+import javafx.beans.property.*;
 
 import javafx.scene.image.Image;
 
 // For a smooth movement of the screen
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
-import javafx.util.Duration;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.animation.*;
+import javafx.util.*;
+import javafx.event.*;
 
 import dfsim.*;
 import dfsim.gui.*;
 
+// DfSquareMapEntity is essentially a living, movable thing in the game.
+// For objects in the future I might want to make this an intermediate
+// class DfLivingEntity and create a new base class that they both inheret
+// from.
 public abstract class DfSquareMapEntity extends Rectangle {
+
+    // Does this entity map to a person?
+    private Person person;
+    public void setPerson(Person p) { person = p; }
+    public Person getPerson() { return person ; }
 
     public enum EntityType {
         Party,
@@ -58,6 +54,10 @@ public abstract class DfSquareMapEntity extends Rectangle {
     private Timeline timeline;
     private boolean canMove = true;
     public boolean getCanMove() { return canMove; }
+    private int moveState = 0; // which of the movement states
+    public int getMoveState() { return moveState; }
+    private boolean moveStateReverse = false; // Iterating forward or backward on move states, it rotates
+    public boolean getMoveStateReverse() { return moveStateReverse; }
     
     // Dun stuff
     protected DfSquareMap map;
@@ -110,11 +110,11 @@ public abstract class DfSquareMapEntity extends Rectangle {
         init(theType);
     }
 
-    // Meant to be overridden
-    protected void handleMouseEnter(Object objEnt, MouseEvent event) {  }
+    // Meant to be overridden, deprecated
+    //protected void handleMouseEnter(Object objEnt, MouseEvent event) {  }
 
-    // Meant to be overridden
-    protected void handleClick(Object objEnt, MouseEvent event) {  }
+    // Meant to be overridden, deprecated
+    //protected void handleClick(Object objEnt, MouseEvent event) {  }
 
     // Meant to be overridden if we want any custom logic for the subclasses
     protected void onMoveFinished() { }
@@ -137,6 +137,8 @@ public abstract class DfSquareMapEntity extends Rectangle {
 
         type = theType;
 
+        // These are now deprecated when using canvas...
+        /*
         setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -148,7 +150,7 @@ public abstract class DfSquareMapEntity extends Rectangle {
             public void handle(MouseEvent event) {
                 handleMouseEnter(event.getSource(), event);
             }
-        });
+        });*/
 
         /*shapeText.setUserData(this);
         getSelectedCircle().setUserData(this);
@@ -209,6 +211,26 @@ public abstract class DfSquareMapEntity extends Rectangle {
         //setupAnimationListeners();
     }
 
+    // Update the movement state as the sprites walk around.
+    public void updateMoveState() {
+        if (person == null || person.getSprite() == null) {
+            return;
+        }
+        if (moveStateReverse == true) {
+            moveState--;
+        }
+        else {
+            moveState++;
+        }
+
+        if (moveState <= 0) {
+            moveStateReverse = false;
+        }
+        else if (moveState >= person.getSprite().getNumMoveStates()-1) {
+            moveStateReverse = true;
+        }
+    }
+
     public void playMoveAnimation(double x, double y) {
         // Can't do another move until we finish animating
         // this one; the variable is reset on the onFinish of the timeline.
@@ -256,6 +278,9 @@ public abstract class DfSquareMapEntity extends Rectangle {
         
         facing = dir;
 
+        // Update move state for the walking animation
+        updateMoveState();
+
         // This won't work if we move into a player tile.
         tile.attach(this);
 
@@ -271,7 +296,7 @@ public abstract class DfSquareMapEntity extends Rectangle {
         else {
             // We aren't using translate X and Y here because this entity has
             // already been bound to the offsetX and Y for its translate values
-            // at this point and this just needs to go straight to the XZ coordinates.
+            // at this point and this just needs to go straight to the XY coordinates.
             playMoveAnimation(
                 tile.getX() + (double)posOffset,
                 tile.getY() + (double)posOffset);
@@ -313,5 +338,90 @@ public abstract class DfSquareMapEntity extends Rectangle {
         if (getTile() == null)
             return null;
         return getTile().getAdjacentTileInDir(facing);
+    }
+    
+    public void drawNoGraphics(GraphicsContext gc) {
+        double drawX = getX();
+        double drawY = getY();
+
+        // Check if we are the main character - if so we are always centered,
+        // if not we need to use offsets
+        if (getPerson() != Data.personList.get(0)) {
+            drawX += map.getXOffset();
+            drawY += map.getYOffset();
+        }
+
+        // Only draw if we are visible
+        gc.setFill(getFill());
+        gc.setStroke(getStroke());
+        gc.fillRect(drawX, drawY, getWidth(), getHeight());
+
+        gc.setStroke(getStroke());
+        gc.setLineWidth(getStrokeWidth());
+        gc.strokeRect(drawX, drawY, getWidth(), getHeight());
+        gc.setLineWidth(1);
+    }
+
+    public void draw(GraphicsContext gc) {
+        if (Constants.ENABLE_TILE_GRAPHICS == false || person == null) {
+            drawNoGraphics(gc);
+            return;
+        }
+        
+        CharSprite sprite = person.getSprite();
+        if (sprite == null) {
+            drawNoGraphics(gc);
+            return;
+        }
+        /*
+        public void drawImage(Image img,
+                      double sx,
+                      double sy,
+                      double sw,
+                      double sh,
+                      double dx,
+                      double dy,
+                      double dw,
+                      double dh)
+
+        Draws the specified source rectangle of the given image 
+        to the given destination rectangle of the Canvas.
+
+        Parameters:
+        img - the image to be drawn or null.
+        sx - the source rectangle's X coordinate position.
+        sy - the source rectangle's Y coordinate position.
+        sw - the source rectangle's width.
+        sh - the source rectangle's height.
+        dx - the destination rectangle's X coordinate position.
+        dy - the destination rectangle's Y coordinate position.
+        dw - the destination rectangle's width.
+        dh - the destination rectangle's height.
+
+        drawImage(image, 0, 0, w/2, h/2, w/4, h/4, w/2, h/2
+        );
+        */
+
+        // For now just hacking the numbers in
+        //gc.drawImage(img, 10, 10, 50, 50, getX(), getX(), getWidth(), getHeight());
+
+
+        double drawX = getX();// + map.getXOffset();
+        double drawY = getY();// + map.getYOffset();
+        // Check if we are the main character - if so we are always centered,
+        // if not we need to use offsets
+        if (getPerson() != Data.personList.get(0)) {
+            drawX += map.getXOffset();
+            drawY += map.getYOffset();
+        }
+  
+        //if (drawX > DfSim.width || drawX < (0 - getWidth()) || drawY > DfSim.height || drawY < (0 - getHeight())) {
+        //    return;
+       // }
+
+        int index = sprite.getFrameIndexForMovementState(getMoveState(), getFacing());
+  
+        //gc.drawImage(img, 10, 10, 50, 50, getX(), getX(), getWidth(), getHeight());
+        sprite.drawFrameByIndex(gc, index, drawX, drawY, getWidth(), getHeight());
     }
 }

@@ -68,6 +68,27 @@ public class DfScreen extends Scene {
     public Pane getMainPane() { return mainPane; }
     public Pane getUIPane() { return uiPane; }
 
+    // Maintain state of arrow keys being pressed such that we can
+    // move smoothly without waiting for actual key events.
+    private boolean arrowDownPressed = false;
+    private boolean arrowUpPressed = false;
+    private boolean arrowLeftPressed = false;
+    private boolean arrowRightPressed = false;
+    public boolean isArrowDownPressed() { return arrowDownPressed; }
+    public boolean isArrowUpPressed()  { return arrowUpPressed; }
+    public boolean isArrowLeftPressed()  { return arrowLeftPressed; }
+    public boolean isArrowRightPressed()  { return arrowRightPressed; }
+
+    // Allow moving with WASD also
+    private boolean wPressed = false;
+    private boolean aPressed = false;
+    private boolean sPressed = false;
+    private boolean dPressed = false;
+    public boolean isWPressed() { return wPressed; }
+    public boolean isAPressed()  { return aPressed; }
+    public boolean isSPressed()  { return sPressed; }
+    public boolean isDPressed()  { return dPressed; }
+
     public DfScreen(BorderPane root, int width, int height) {
         super(root, width, height, Color.BLACK);
         wid = width;
@@ -96,12 +117,18 @@ public class DfScreen extends Scene {
 
         // Need to use event filters because setOnKeyPressed apparently
         // does not pick up space bar presses ????
-        addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> {
-            processKeyRelease(keyEvent.getCode());
+        addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
+            // First process the key at this base class, like arrow keys,
+            // if that does not block it, forward to subclass for screen-specific processing
+            if (processBaseKeyPress(keyEvent.getCode()) == false) {
+                processKeyPress(keyEvent.getCode());
+            }
             keyEvent.consume();
         });
-        addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
-            processKeyPress(keyEvent.getCode());
+        addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> {
+            if (processBaseKeyRelease(keyEvent.getCode()) == false) {
+                processKeyRelease(keyEvent.getCode());
+            }
             keyEvent.consume();
         });
         
@@ -170,5 +197,44 @@ public class DfScreen extends Scene {
     public void processKeyPress(KeyCode key) { }
 
     // Meant to be overridden
-    public void processKeyRelease(KeyCode key) { }
+    public void processKeyRelease(KeyCode key) { 
+        switch (key) {
+            case ENTER:  DfSim.sim.nextDialogue(); break;
+        }
+    }
+
+    // We interpret some keys at this level.  If it is a key we
+    // intepret here, we return true which stops it from being
+    // forwarded to the subclass because it was already handled
+    // here.
+    private boolean processBaseKeyPress(KeyCode key) { 
+        if (DfSim.noInput == true) {
+            return false;
+        }
+        switch (key) {
+            case RIGHT: arrowRightPressed = true;   return true;
+            case LEFT:  arrowLeftPressed = true;    return true;
+            case UP:    arrowUpPressed = true;      return true;
+            case DOWN:  arrowDownPressed = true;    return true;
+            case W:     wPressed = true;    return true;
+            case A:     aPressed = true;    return true;
+            case S:     sPressed = true;    return true;
+            case D:     dPressed = true;    return true;
+        }
+        return false;
+    }
+
+    private boolean processBaseKeyRelease(KeyCode key) { 
+        switch (key) {
+            case RIGHT: arrowRightPressed = false;  return true;
+            case LEFT:  arrowLeftPressed = false;   return true;
+            case UP:    arrowUpPressed = false;     return true;
+            case DOWN:  arrowDownPressed = false;   return true;
+            case W:     wPressed = false;    return true;
+            case A:     aPressed = false;    return true;
+            case S:     sPressed = false;    return true;
+            case D:     dPressed = false;    return true;
+        }
+        return false;
+    }
 }

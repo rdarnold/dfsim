@@ -56,8 +56,18 @@ import dfsim.*;
 
 public class DfCanvas extends Canvas {
 
-    private LandMap landMap = null;
-    public void setLandMap(LandMap lm) { landMap = lm; }
+    //private LandMap landMap = null;
+    //public void setLandMap(LandMap lm) { landMap = lm; }
+
+    // Generic square map that we "bind" to and draw when called
+    private DfSquareMap squareMap = null;
+    public void setSquareMap(DfSquareMap m) { squareMap = m; }
+
+    // Battle map, is there a common base this could use with DfSquareMap?  Just
+    // a class that least has some abstract methods to implement like drawing,
+    // clicking on tiles, etc?
+    private HexMap hexMap = null;
+    public void setHexMap(HexMap m) { hexMap = m; }
 
     public DfCanvas(double wid, double hgt) {
         super(wid, hgt);
@@ -115,40 +125,40 @@ public class DfCanvas extends Canvas {
         this.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                onMouseClick(event.getX(), event.getY());
-                /*if (event.getButton() == MouseButton.PRIMARY) {
+                //onMouseClick(event.getX(), event.getY());
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    onLeftClick(event.getX(), event.getY());
                     //scenario.leftClick(event.getX(), event.getY());
-                    event.consume();
+                    //event.consume();
                 }
                 else if (event.getButton() == MouseButton.SECONDARY) {
+                    onRightClick(event.getX(), event.getY());
                     //scenario.rightClick(event.getX(), event.getY());
-                }*/
+                }
             }
         });
 
         this.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                onMousePressed(event.getX(), event.getY());
-                /*if (event.getButton() == MouseButton.PRIMARY) {
-                    //scenario.leftClick(event.getX(), event.getY());
-                    event.consume();
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    onLeftPressed(event.getX(), event.getY());
                 }
                 else if (event.getButton() == MouseButton.SECONDARY) {
-                }*/
+                    onRightPressed(event.getX(), event.getY());
+                }
             }
         });
 
         this.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                onMouseDragged(event.getX(), event.getY());
-                /*if (event.isPrimaryButtonDown()) {
-                   // scenario.onMouseDrag(event.getX(), event.getY());
-                    event.consume();
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    onLeftDragged(event.getX(), event.getY());
                 }
-                else if (event.isSecondaryButtonDown()) {
-                }*/
+                else if (event.getButton() == MouseButton.SECONDARY) {
+                    onRightDragged(event.getX(), event.getY());
+                }
             }
         });
 
@@ -166,15 +176,15 @@ public class DfCanvas extends Canvas {
             }
         });
 
-        /*this.setOnMouseMoved(new EventHandler<MouseEvent>() {
+        this.setOnMouseMoved(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                //scenario.onMouseMove(event.getX(), event.getY());
-                event.consume();
+                onMouseMove(event.getX(), event.getY());
             }
-        });*/
+        });
     }
 
+    /*
     private boolean withinClick(double x, double y, MovablePolygon poly) {
         // Was the shape clicked on?  We'll just do a box around
         // each shape to keep it simple
@@ -187,34 +197,70 @@ public class DfCanvas extends Canvas {
             return true;
         }
         return false;
+    }*/
+
+    // Just forward it all up the chain
+    private void onLeftClick(double x, double y) {
+        if (squareMap != null) {
+            squareMap.onLeftClick(x, y);
+        }
+        if (hexMap != null) {
+            hexMap.onLeftClick(x, y);
+        }
     }
 
-    private void onMouseClick(double x, double y) {
-        // See if we clicked on a shape
-        /*for (SysShape shape : sim.getShapes()) {
-            if (withinClick(x, y, shape) == true) {
-                Gos.gos.onClickShape(shape);
-                return;
-            }
-        }*/
+    private void onRightClick(double x, double y) {
+        if (squareMap != null) {
+            squareMap.onRightClick(x, y);
+        }
+        if (hexMap != null) {
+            hexMap.onRightClick(x, y);
+        }
     }
 
-    // Mouse pressed right now is just for the a gravity well
-    private void onMousePressed(double x, double y) {
-        // See if we clicked on a gravity well
-        /*for (GravityWell well : sim.getGravityWells()) {
-            if (withinClick(x, y, well) == true) {
-                draggingWell = well;
-                well.onMousePressed((int)x, (int)y);
-                return;
-            }
-        }*/
+    private void onLeftPressed(double x, double y) {
+        if (squareMap != null) {
+            squareMap.onLeftPressed(x, y);
+        }
+        if (hexMap != null) {
+            hexMap.onLeftPressed(x, y);
+        }
     }
     
-    private void onMouseDragged(double x, double y) {
-        /*if (draggingWell != null) {
-            draggingWell.onMouseDragged(x, y);
-        }*/
+    private void onRightPressed(double x, double y) {
+        if (squareMap != null) {
+            squareMap.onRightPressed(x, y);
+        }
+        if (hexMap != null) {
+            hexMap.onRightPressed(x, y);
+        }
+    }
+    
+    private void onLeftDragged(double x, double y) {
+        if (squareMap != null) {
+            squareMap.onLeftDragged(x, y);
+        }
+        if (hexMap != null) {
+            hexMap.onLeftDragged(x, y);
+        }
+    }
+
+    private void onRightDragged(double x, double y) {
+        if (squareMap != null) {
+            squareMap.onRightDragged(x, y);
+        }
+        if (hexMap != null) {
+            hexMap.onRightDragged(x, y);
+        }
+    }
+
+    private void onMouseMove(double x, double y) {
+        if (squareMap != null) {
+            squareMap.onMouseMove(x, y);
+        }
+        if (hexMap != null) {
+            hexMap.onMouseMove(x, y);
+        }
     }
     
     public void updateOneFrame() {
@@ -225,7 +271,20 @@ public class DfCanvas extends Canvas {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
 
-        drawLandMap(gc);
+        if (squareMap != null) {
+            squareMap.draw(gc);
+        }
+        if (hexMap != null) {
+            hexMap.draw(gc);
+        }
+
+        // Lastly draw the dialogue window, no matter which canvas
+        // we are on, all the same.
+        DfSim.dialogueWindow.draw(gc);
+
+        /*if (landMap != null) {
+            landMap.draw(gc);
+        }*/
 
         // Draw a border around the canvas
         //drawBorder(gc);
@@ -246,13 +305,6 @@ public class DfCanvas extends Canvas {
         for (GravityWell item : sim.getGravityWells()) {
             drawGravityWell(gc, item);
         }*/
-    }
-
-    // If we have a landmap, draw
-    public void drawLandMap(GraphicsContext gc) {
-        if (landMap != null) {
-            landMap.draw(gc);
-        }
     }
 
     /*private void drawGravityWell(GraphicsContext gc, GravityWell item) {

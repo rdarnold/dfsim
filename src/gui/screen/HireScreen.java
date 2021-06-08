@@ -137,6 +137,7 @@ public class HireScreen extends DfScreen {
 
     @Override
     public void processKeyRelease(KeyCode key) {
+        super.processKeyRelease(key);
         if (DfSim.noInput == true) {
             return;
         }

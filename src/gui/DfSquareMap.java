@@ -20,16 +20,22 @@ import javafx.util.Duration;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 
+import javafx.scene.canvas.*;
+
 import dfsim.gui.*;
 
 // Any square map - overland, dungeon, town.
-public abstract class DfSquareMap {
+public abstract class DfSquareMap  {
 
     // For movement animation
     private Timeline timeline;
     private boolean canMove = true;
 
     public boolean getCanMove() { return canMove; }
+    
+    // Pointer to the subclass tile array but in generic form
+    // so we can use it for processing here
+    protected DfSquareTile[][] squareTiles;
 
     // Big map, lots of tiles
     protected int numXTiles = 50;
@@ -50,6 +56,17 @@ public abstract class DfSquareMap {
     public int getYOffset() { return yOffset.get(); }
 
     protected Pane pane;
+    
+    // Inheriting classes MUST implement a draw function
+    public abstract void draw(GraphicsContext gc);
+    
+    public abstract void onLeftClick(double x, double y);
+    public abstract void onRightClick(double x, double y);
+    public abstract void onLeftPressed(double x, double y);
+    public abstract void onRightPressed(double x, double y);
+    public abstract void onLeftDragged(double x, double y);
+    public abstract void onRightDragged(double x, double y);
+    public abstract void onMouseMove(double x, double y);
 
     public DfSquareMap() { 
         this.timeline = new Timeline(60);
@@ -81,16 +98,20 @@ public abstract class DfSquareMap {
         timeline.getKeyFrames().clear();
 
         //timeline = new Timeline(60);
+        // Change millis() here to make movement slower or faster
         timeline.getKeyFrames().addAll(
-            new KeyFrame(Duration.millis(50), new KeyValue(xOffset, x)),
-            new KeyFrame(Duration.millis(50), new KeyValue(yOffset, y))
+            new KeyFrame(Duration.millis(100), new KeyValue(xOffset, x)),
+            new KeyFrame(Duration.millis(100), new KeyValue(yOffset, y))
         );
         timeline.play();
     }
 
     public void moveAvatarToTile(DfSquareMapEntity ent, DfSquareTile moveTile, Constants.Dir dir) {
-        if (moveTile != null && ent != null &&
-            moveTile.canBeMovedTo(ent) == true) {
+        if (moveTile != null && ent != null && moveTile.canBeMovedTo(ent) == true) {
+            // Update move state for the walking animation
+            ent.updateMoveState();
+
+            // Attach entity to the new tile
             moveTile.attach(ent);
         }
         centerOnEntity(ent);
@@ -108,10 +129,14 @@ public abstract class DfSquareMap {
         }*/
     }
 
+    // It seems weird that this uses a different movement function than the 
+    // entities use.
     public void moveAvatarByInput(DfSquareMapEntity ent, Constants.Dir dir) {
         ent.setFacing(dir);
+
         if (getCanMove() == false)
             return;
+        
         DfSquareTile tile = ent.getTile();
         DfSquareTile to = null;
         switch (dir) {
@@ -245,5 +270,45 @@ public abstract class DfSquareMap {
 
         // Can't actually get here, SOUTH is the default value based on above.
         //return -1;
+    }
+
+    protected int getTileColForClick(double x, double y) { 
+        // Tiles are all square
+        double tileSize = squareTiles[0][0].getWidth();
+        
+        // Based on size of tiles, and where the top left tile draws, we can calculate
+        // which tile we clicked on.
+        double tileMapX = x - squareTiles[0][0].getDrawX();
+
+        return (int)(tileMapX / tileSize);
+    }
+
+    protected int getTileRowForClick(double x, double y) { 
+        // Tiles are all square
+        double tileSize = squareTiles[0][0].getHeight();
+        
+        // Based on size of tiles, and where the top left tile draws, we can calculate
+        // which tile we clicked on.
+        double tileMapY = y - squareTiles[0][0].getDrawY();
+
+        return (int)(tileMapY / tileSize);
+    }
+
+    protected DfSquareTile getTileForClick(double x, double y) {
+        // So let's say top left is at -100, -100 and the size is 20.
+        // And the mouse clicked on 255, 255.  That means the square is...
+        // the square at coordinates 355, 355 on the map.
+        // So if each tile is 20 pixels wide, that means it's number 355/20 = 17.75 = 17th tile (index)
+        int col = getTileColForClick(x, y);
+        int row = getTileRowForClick(x, y);
+
+        if (col < 0 || col > numXTiles-1) {
+            return null;
+        }
+        if (row < 0 || row > numYTiles-1) {
+            return null;
+        }
+
+        return squareTiles[col][row];
     }
 }

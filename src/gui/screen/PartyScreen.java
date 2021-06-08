@@ -144,6 +144,7 @@ public class PartyScreen extends DfScreen {
 
     @Override
     public void processKeyRelease(KeyCode key) {
+        super.processKeyRelease(key);
         if (DfSim.noInput == true) {
             return;
         }
@@ -175,6 +176,10 @@ public class PartyScreen extends DfScreen {
     }
     
     public void onMateButtonClicked(MovableButton mb) {
+        Person mate = card.getPerson();
+        if (mate == Data.personList.get(0)) {
+            return;
+        }
         //Utils.log("Mate Button Not Yet Implemented");
         gifTest.setImage(Data.gifs.get(Utils.number(0, Data.gifs.size()-1)));
         
@@ -187,7 +192,32 @@ public class PartyScreen extends DfScreen {
         ft.play();
 
         gifTest.setVisible(true);
-        Data.personList.get(1).mated++;
+
+        DfSim.sim.showDialogue(mate, /*"You want to have sex?  Oh, ugh... Fine, if you insist... " +
+        "(" + mate.getName() + " removes " + mate.getArmor() + ".  " +
+        "You have sex with " + mate.getName() + ".  " + mate.getName() + " wears " + mate.getArmor() + ").  " +
+        "Did you have to dump your load in me? (" + mate.getName() + " rolls her eyes).  In Castle Starlock, we don't " +
+        "do things this way."
+        ); */
+        "CANDOUR compels me, BECHER! to commend " +
+        "the verse which blends the censor with the friend. " +
+        "Your strong yet just reproof extorts applause " +
+        "from me, the heedless and imprudent cause. " +
+        "For this wild error which pervades my strain, " +
+        "I sue for pardon, — must I sue in vain? " +
+        "The wise sometimes from Wisdom's ways depart: " +
+        "Can youth then hush the dictates of the heart? " +
+        "Precepts of prudence curb, but can't control " +
+        "the fierce emotions of the flowing soul. " +
+        "When Love's delirium haunts the glowing mind " +
+        "limping decorum lingers far behind: " +
+        "Vainly the dotard mends her prudish pace, " +
+        "outstript and vanquish'd in the mental chase. " +
+        "The young, the old, have worn the chains of love; " +
+        "Let those they ne'er confined my lay reprove.");
+         
+        Utils.log("You mate with " + mate.getName() + ".");
+        mate.mated++;
         card.update();
     }
 

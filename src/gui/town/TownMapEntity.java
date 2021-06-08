@@ -39,7 +39,6 @@ public abstract class TownMapEntity extends DfSquareMapEntity {
     public static int posOffset = (TownMapTile.defSize - TownMapEntity.defSize) / 2;
     
     // Town stuff
-    public Person person;
     protected TownMap getMap() { return (TownMap)map; }
 
     public void setTile(TownMapTile newTile) { super.setTile(newTile); }
@@ -63,9 +62,9 @@ public abstract class TownMapEntity extends DfSquareMapEntity {
 
     // For hovering over and such
     public String printInfo() {
-        if (person == null) {
+        if (getPerson() == null) {
             return "";
         }
-        return person.toStringTownInfo();
+        return getPerson().toStringTownInfo();
     }
 }

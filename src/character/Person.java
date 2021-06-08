@@ -19,6 +19,8 @@ import javafx.beans.property.ObjectProperty;
 
 import javafx.scene.image.Image;
 
+import dfsim.gui.*;
+
 public class Person  {
     
     public Person() { 
@@ -218,6 +220,25 @@ public class Person  {
       return null;
     }
 
+    // For now we allow reuse of sprites but it probably isn't necessary
+    // since there is so much customization available.
+    // These sprites should in the future be assigned more like by class,
+    // looks, etc.; I need to categorize them better.
+    public void setRandomCharSprite() {
+      if (isFemale()) {
+        while (sprite == null) {
+          int n = Utils.number(0, Data.femaleSprites.size()-1);
+          setSprite(Data.femaleSprites.get(n));
+        }
+      }
+      else {
+        while (sprite == null) {
+          int n = Utils.number(0, Data.maleSprites.size()-1);
+          setSprite(Data.maleSprites.get(n));
+        }
+      }
+    }
+
     public void setRandomPortrait() {
       if (isFemale()) {
         if (GraphicsUtils.femalePortraitsAvailable() == false) {
@@ -229,13 +250,13 @@ public class Person  {
           Portrait p = Data.femalePortraits.get(n);
           if (p.inUse() == false) {
             p.assignTo(this);
-            portrait = p;
+            setPortrait(p);
             break;
           }
         }
       }
       else {
-        if (GraphicsUtils.femalePortraitsAvailable() == false) {
+        if (GraphicsUtils.malePortraitsAvailable() == false) {
           Utils.log("WARNING: Ran out of male portraits!");
           return;
         }
@@ -244,7 +265,7 @@ public class Person  {
           Portrait p = Data.malePortraits.get(n);
           if (p.inUse() == false) {
             p.assignTo(this);
-            portrait = p;
+            setPortrait(p);
             break;
           }
         }
@@ -287,14 +308,22 @@ public class Person  {
         }
 
         setRandomPortrait();
+        setRandomCharSprite();
     }
 
     public Constants.CharClass chClass = Constants.CharClass.Villager;
     public Personality personality = null;
     public Constants.Gender gender = Constants.Gender.Male;
     public int affection = 0;
-    public Portrait portrait = null;
     public int mated = 0;
+
+    private Portrait portrait = null;
+    public Portrait getPortrait() { return portrait; }
+    public void setPortrait(Portrait p) { portrait = p; }
+
+    private CharSprite sprite = null;
+    public CharSprite getSprite() { return sprite; }
+    public void setSprite(CharSprite s) { sprite = s; }
 
     public boolean met = false; // Show stats or no over hover?  Have we "met" this person
     public void setMet(boolean isMet) { met = isMet; }
@@ -484,6 +513,10 @@ public class Person  {
 
         // Randomly set affection
         person.affection = Utils.number(1, 1000);
+
+        // Set up random portrait and char sprite
+        person.setRandomPortrait();
+        person.setRandomCharSprite();
 
         // Now generate stats
         // Randomize the variation, randomize the level.  We do want

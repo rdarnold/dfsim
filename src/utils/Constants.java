@@ -23,6 +23,10 @@ public final class Constants {
 
     public static final String FILENAME_CHAR_SPRITE_HERO1 = CHAR_SPRITES_PATH + "hero1.png";
 
+    // Char sprites
+    public static final String FEMALE_CHARSPRITE_PATH = CHAR_SPRITES_PATH + "female/";
+    public static final String MALE_CHARSPRITE_PATH = CHAR_SPRITES_PATH + "male/";
+
     // The pipoya defines
     public static final boolean USING_PIPOYA = true;
 
@@ -91,6 +95,55 @@ public final class Constants {
 
         public static Dir getRandomDir() {
             return fromInt(Utils.number(0, 3));
+        }
+    }
+    
+    public static enum Ordinal {
+        NORTHWEST(0), 
+        NORTH(1), 
+        NORTHEAST(2), 
+        SOUTHEAST(3), 
+        SOUTH(4), 
+        SOUTHWEST(5), 
+        EAST(6), 
+        WEST(7), 
+        NUMDIRS(8), 
+        NONE(9);
+
+        private int _value;
+
+        Ordinal(int Value) {
+            this._value = Value;
+        }
+
+        public int val() {
+            return _value;
+        }
+
+        private static Ordinal[] cachedValues = null;
+        public static Ordinal fromInt(int i) {
+            if (Ordinal.cachedValues == null) {
+                Ordinal.cachedValues = Ordinal.values();
+            }
+            return Ordinal.cachedValues[i];
+        }
+
+        public static Ordinal revOrdinal(Constants.Ordinal dir) {
+            switch (dir) {
+                case NORTH: return SOUTH;
+                case EAST:  return WEST;
+                case WEST:  return EAST;
+                case SOUTH: return NORTH;
+                case NORTHEAST: return SOUTHWEST;
+                case NORTHWEST: return SOUTHEAST;
+                case SOUTHEAST: return NORTHWEST;
+                case SOUTHWEST: return NORTHEAST;
+            }
+            return null;
+        }
+
+        public static Ordinal getRandomDir() {
+            return fromInt(Utils.number(0, 7));
         }
     }
 

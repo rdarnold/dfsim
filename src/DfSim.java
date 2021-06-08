@@ -78,6 +78,8 @@ public class DfSim extends Application {
     public static TownMapScreen townMapScreen;
     public static PartyScreen partyScreen;
 
+    public static DialogueWindow dialogueWindow;
+
     public static DfScreen activeScene;
     public static DfScreen priorScene;
 
@@ -103,6 +105,8 @@ public class DfSim extends Application {
         dunMapScreen = new DunMapScreen(new BorderPane(), width, height);
         townMapScreen = new TownMapScreen(new BorderPane(), width, height);
         partyScreen = new PartyScreen(new BorderPane(), width, height);
+
+        dialogueWindow = new DialogueWindow();
 
         sim.postInit();
 

@@ -53,6 +53,34 @@ public final class GraphicsLoader {
         Utils.log("Loaded " + i + " images from " + directoryPath.getAbsolutePath());
     }
 
+    // Kind of wish I could just use the function above and then "upgrade" the objects
+    public static void loadAllCharSpritesFromFolder(String filePath, ArrayList<CharSprite> spriteList) {
+        String fileNameAndPath;
+        CharSprite sprite;
+        File directoryPath;
+        String contents[];
+        int i = 0;
+
+        directoryPath = new File(filePath);
+        //List of all files and directories
+        contents = directoryPath.list();
+        if (contents == null) {
+            Utils.log("CharSprite folder " + directoryPath.getAbsolutePath() + " not found.");
+            return;
+        }
+        //Utils.log("List of files and directories in " + directoryPath.getAbsolutePath() + ":");
+        for (i = 0; i < contents.length; i++) {
+            //Utils.log(contents[i]);
+            fileNameAndPath = filePath + contents[i];
+            sprite = loadOneCharSprite(fileNameAndPath);
+            if (sprite != null) {
+                spriteList.add(sprite);
+            }
+        }
+
+        Utils.log("Loaded " + i + " char sprites from " + directoryPath.getAbsolutePath());
+    }
+
     public static Image loadOneImage(String fileNameAndPath) {
         try {
             InputStream stream = new FileInputStream(fileNameAndPath);
@@ -78,6 +106,20 @@ public final class GraphicsLoader {
         return null;
     }
 
+    public static CharSprite loadOneCharSprite(String fileNameAndPath) {
+        try {
+            InputStream stream = new FileInputStream(fileNameAndPath);
+            CharSprite sprite = new CharSprite(stream);
+            Data.sprites.add(sprite); // Automatically add ref to master list
+            return sprite;
+        }
+        catch (FileNotFoundException e) {
+           Utils.log("CharSprite file " + fileNameAndPath + " not found.");
+        }
+        return null;
+    }
+
+
     public static void loadImages() {
         loadPortraits();
         loadGifs(); // Disabled for now just to save time
@@ -101,7 +143,19 @@ public final class GraphicsLoader {
     }
     
     public static void loadCharSprites() {
-        Data.spriteHero1 = loadOneSprite("." + Constants.FILENAME_CHAR_SPRITE_HERO1);
+        //Data.spriteHero1 = loadOneSprite("." + Constants.FILENAME_CHAR_SPRITE_HERO1);
+        
+        // The . means use the working directory
+        loadAllCharSpritesFromFolder("." + Constants.FEMALE_CHARSPRITE_PATH, Data.femaleSprites);
+        loadAllCharSpritesFromFolder("." + Constants.MALE_CHARSPRITE_PATH, Data.maleSprites);
+
+        // Make the frames...
+        for (CharSprite spr : Data.femaleSprites) {
+            spr.createStandardFrames();
+        }
+        for (CharSprite spr : Data.maleSprites) {
+            spr.createStandardFrames();
+        }
     }
     
 

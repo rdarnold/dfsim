@@ -76,6 +76,7 @@ public class CharCard {
         eqArea.setPrefHeight(200);
     }
 
+    public Person getPerson() { return person; }
     public void setPerson(Person p) {
         person = p;
         update();

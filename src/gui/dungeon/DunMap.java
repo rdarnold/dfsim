@@ -5,12 +5,9 @@ import java.util.ArrayList;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.*;
+
+import javafx.scene.canvas.*;
 
 import dfsim.gui.*;
 
@@ -93,6 +90,8 @@ public class DunMap extends DfSquareMap {
                 tilesArray.add(tile);
             }
         }
+        // Set the base class pointer to the tile array
+        super.squareTiles = tiles;
         
         updateDirections();
         randomizeTerrain();
@@ -113,6 +112,7 @@ public class DunMap extends DfSquareMap {
     }
 
     public void start(Constants.Dir dir) {
+        avatar.setPerson(Data.personList.get(0));
         // Basically, put the avatar in the middle of the screen,
         // center the exit on the avatar.
         if (exit == null) {
@@ -296,6 +296,7 @@ public class DunMap extends DfSquareMap {
     
     @Override
     protected void onMoveFinished() {
+        super.onMoveFinished();
         DunMapTile tile = avatar.getTile();
         if (tile.getType() == TileType.Exit) {
             DfSim.showLandMapScreen();
@@ -979,5 +980,52 @@ public class DunMap extends DfSquareMap {
         // bombs to get through rock, axes for trees, arrows to pause
         // enemies (although they get mad after and run faster).  Or is that
         // too complex and overkill for this sim?
+    }
+    
+    @Override
+    public void onLeftClick(double x, double y) {
+        DunMapTile tile = (DunMapTile)getTileForClick(x, y);
+        if (tile != null) {
+            onLeftClickTile(tile);
+        }
+    }
+
+    @Override
+    public void onRightClick(double x, double y) { 
+        DunMapTile tile = (DunMapTile)getTileForClick(x, y);
+        if (tile != null) {
+            onRightClickTile(tile);
+        }
+    }
+
+    @Override
+    public void onLeftPressed(double x, double y) { }
+
+    @Override
+    public void onRightPressed(double x, double y) { }
+    
+    @Override
+    public void onLeftDragged(double x, double y) { }
+
+    @Override
+    public void onRightDragged(double x, double y) { }
+
+    @Override
+    public void onMouseMove(double x, double y) { }
+
+    @Override
+    public void draw(GraphicsContext gc) {
+        // Draw all the visible tiles (tile knows if it's visible or not)
+        for (DunMapTile tile : tilesArray) {
+            tile.draw(gc);
+        }
+        
+        // Draw the mobiles
+        for (DunMapMon mon : mons) {
+            mon.draw(gc);
+        }
+
+        // Draw the avatar
+        avatar.draw(gc);
     }
 }

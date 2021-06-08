@@ -26,15 +26,13 @@ import dfsim.*;
 import dfsim.gui.*;
 
 public class DunMapAvatar extends DunMapEntity {
-
-    Person person;
     
     public DunMapAvatar(DunMap theMap) {
         super(theMap, EntityType.Party);
         init();
     }
 
-    @Override
+    /*@Override
     protected void handleMouseEnter(Object objEnt, MouseEvent event) {
         if (objEnt == null) 
             return;
@@ -53,7 +51,7 @@ public class DunMapAvatar extends DunMapEntity {
         else {
             getMap().onRightClickAvatar(ent);
         }
-    }
+    }*/
 
     private void init() {
     }

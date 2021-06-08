@@ -1,18 +1,13 @@
 package dfsim.gui;
 
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
+import javafx.scene.canvas.*;
+import javafx.scene.paint.*;
 import javafx.scene.shape.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
-import java.util.List;
-import javafx.geometry.Point2D;
-import java.util.ArrayList;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.DoubleProperty;
+import javafx.scene.text.*;
+import java.util.*;
+import javafx.geometry.*;
+import javafx.beans.property.*;
+import javafx.beans.value.*;
 
 import dfsim.*;
 
@@ -54,6 +49,7 @@ public class MovablePolygon extends Polygon {
     public double getPrevSize() { return prevSize; }
 
     private boolean selected = false;
+    public boolean isSelected() { return selected; }
     public boolean getSelected() { return selected; }
     public void setSelected(boolean sel) { 
         selected = sel; 
@@ -78,8 +74,12 @@ public class MovablePolygon extends Polygon {
 
     protected double m_fPrevCenterX = 0;
     protected double m_fPrevCenterY = 0;
-    protected double m_fCenterX = 0;
-    protected double m_fCenterY = 0;
+    //protected double m_fCenterX = 0;
+    //protected double m_fCenterY = 0;
+
+    // These need to be properties so we can bind them and use animations with them easily
+    protected SimpleDoubleProperty m_fpCenterXProperty = new SimpleDoubleProperty(0);
+    protected SimpleDoubleProperty m_fpCenterYProperty = new SimpleDoubleProperty(0);
 
     protected double xSpeed = 0;
     protected double ySpeed = 0;
@@ -104,8 +104,13 @@ public class MovablePolygon extends Polygon {
     public double getLeftX() { return leftX; }
     public double getLeftY() { return leftY; }
 
-    public double getCenterX() { return m_fCenterX; }
-    public double getCenterY() { return m_fCenterY; }
+    //public double getCenterX() { return m_fCenterX; }
+    //public double getCenterY() { return m_fCenterY; }
+    public double getCenterX() { return m_fpCenterXProperty.get(); }
+    public double getCenterY() { return m_fpCenterYProperty.get(); }
+
+    public SimpleDoubleProperty centerXProperty() { return m_fpCenterXProperty; }
+    public SimpleDoubleProperty centerYProperty() { return m_fpCenterYProperty; }
 
     //private double xPoints[];
     //private double yPoints[];
@@ -121,6 +126,15 @@ public class MovablePolygon extends Polygon {
 
     public void setAngleDegrees(double deg) { m_fAngleInDegrees = deg; }
     public double getAngleDegrees() {return m_fAngleInDegrees; }
+
+    public void rotateLeft(double deg) {
+        m_fAngleInDegrees -= deg;
+        m_fAngleInDegrees = Utils.normalizeAngle(m_fAngleInDegrees);
+    }
+    public void rotateRight(double deg) {
+        m_fAngleInDegrees += deg;
+        m_fAngleInDegrees = Utils.normalizeAngle(m_fAngleInDegrees);
+    }
     
     protected String shapeStr = null;
     //public Text getShapeText() { return shapeText; }
@@ -211,6 +225,20 @@ public class MovablePolygon extends Polygon {
         selectedPolygon.setStroke(Color.rgb(255, 0, 0, 0.5));
         selectedPolygon.setStrokeWidth(3);
         selectedPolygon.setVisible(false);
+
+        // Add property listeners for our center position so we can comprehensively
+        // "move" our shape correctly with all points
+        m_fpCenterXProperty.addListener(new ChangeListener(){
+            @Override public void changed(ObservableValue o,Object oldVal, Object newVal){
+                onChangeCenterXY();
+            }
+        });
+
+        m_fpCenterYProperty.addListener(new ChangeListener(){
+            @Override public void changed(ObservableValue o,Object oldVal, Object newVal){
+                onChangeCenterXY();
+            }
+        });
     }
 
     public void deepCopy(MovablePolygon from) {
@@ -309,6 +337,12 @@ public class MovablePolygon extends Polygon {
 
     private void updatePointsForShape() {
         int numCorners = getNumCorners();
+        // Nah let's just let it crash for now... this should not happen
+        /*if (numCorners <= 0) {
+            // Check if we are even set up yet...
+            Utils.log("ERROR:  MovablePolygon trying to update points but not setup yet!");
+            return;
+        }*/
         List<Double> points = getPoints();
         double anglePerCorner = 360 / numCorners;
         double cornerAngle = m_fAngleInDegrees;
@@ -316,20 +350,13 @@ public class MovablePolygon extends Polygon {
         double y = 0;
         for (int i = 0; i < numCorners; i++) {
             // Calc from straight line going up
-            x = m_fCenterX;
-            y = m_fCenterY - (getSize()/2);
-            Point2D point = Utils.calcRotatedPoint(m_fCenterX, m_fCenterY, x, y, cornerAngle);
+            x = m_fpCenterXProperty.get(); //m_fCenterX;
+            y = m_fpCenterYProperty.get() - (getSize()/2); //m_fCenterY - (getSize()/2);
+            Point2D point = Utils.calcRotatedPoint(m_fpCenterXProperty.get(), m_fpCenterYProperty.get(), x, y, cornerAngle);
             updatePoint(i, point.getX(), point.getY());
             cornerAngle += anglePerCorner;
             cornerAngle = Utils.normalizeAngle(cornerAngle);
         }
-    }
-
-    private void updatePointsForDrop() {
-        // A drop is a thin 6 point thing sort of like a capsule but
-        // angled.  But for now we're just making it a regular shape,
-        // albeit a small one.
-        updatePointsForShape();
     }
 
     // Same as number of sides
@@ -356,16 +383,16 @@ public class MovablePolygon extends Polygon {
     }
 
     private void updateBoundingCircle() {
-        boundingCircle.setCenterX(m_fCenterX);
-        boundingCircle.setCenterY(m_fCenterY);
+        boundingCircle.setCenterX(m_fpCenterXProperty.get());
+        boundingCircle.setCenterY(m_fpCenterYProperty.get());
         boundingCircle.setRadius(getSize()/2);
     }
 
     private void updateSelectedCircle() {
         // Actually we don't even need to bother unless we are selected.
         if (selected == true) {
-            selectedCircle.setCenterX(m_fCenterX);
-            selectedCircle.setCenterY(m_fCenterY);
+            selectedCircle.setCenterX(m_fpCenterXProperty.get());
+            selectedCircle.setCenterY(m_fpCenterYProperty.get());
             selectedCircle.setRadius((getSize()/2)+1);
         }
     }
@@ -387,11 +414,20 @@ public class MovablePolygon extends Polygon {
         return true;
     }
 
-    public void moveTo(double newCenterX, double newCenterY) {
-        m_fCenterX = newCenterX;
-        m_fCenterY = newCenterY;
-        updateMetaData();
+    // Triggers on event
+    private void onChangeCenterXY() {
         updatePoints();
+        updateMetaData();
+    }
+
+    public void moveTo(double newCenterX, double newCenterY) {
+        m_fpCenterXProperty.set(newCenterX);
+        m_fpCenterYProperty.set(newCenterY);
+        //m_fCenterX = newCenterX;
+        //m_fCenterY = newCenterY;
+
+        //updateMetaData();
+        //updatePoints();
     }
 
     public void moveBack() {
@@ -404,8 +440,8 @@ public class MovablePolygon extends Polygon {
         if (overlay != null) {
             updateBoundingCircle();
             updateSelectedCircle();
-            shapeText.setX(m_fCenterX - (shapeText.getText().length() * 4));
-            shapeText.setY(m_fCenterY + 6);
+            shapeText.setX(m_fpCenterXProperty.get() - (shapeText.getText().length() * 4)); //m_fCenterX - (shapeText.getText().length() * 4));
+            shapeText.setY(m_fpCenterYProperty.get() + 6); //m_fCenterY + 6);
             overlay.centerOn(this);
             updateSelectedPolygon();
         }
@@ -414,10 +450,14 @@ public class MovablePolygon extends Polygon {
     public void moveBy(double mX, double mY) {
         double moveX = mX;
         double moveY = mY;
-        m_fPrevCenterX = m_fCenterX;
-        m_fPrevCenterY = m_fCenterY;
-        m_fCenterX += moveX;
-        m_fCenterY += moveY;
+        //m_fPrevCenterX = m_fCenterX;
+        //m_fPrevCenterY = m_fCenterY;
+        //m_fCenterX += moveX;
+        //m_fCenterY += moveY;
+        m_fPrevCenterX = m_fpCenterXProperty.get();
+        m_fPrevCenterY = m_fpCenterYProperty.get();
+        m_fpCenterXProperty.set(m_fpCenterXProperty.get() + moveX);
+        m_fpCenterYProperty.set(m_fpCenterYProperty.get() + moveY);
         updateMetaData();
         List<Double> points = getPoints();
         for (int i = 0; i < points.size(); i+=2) {
@@ -499,5 +539,43 @@ public class MovablePolygon extends Polygon {
         double distanceY = boundingCircle.getCenterY() - otherCircle.getCenterY();
         double radiusSum = otherCircle.getRadius() + boundingCircle.getRadius();
         return distanceX * distanceX + distanceY * distanceY <= radiusSum * radiusSum;
+    }
+    
+    public void drawSelected(GraphicsContext gc) {
+        gc.setStroke(selectedPolygon.getStroke());
+        gc.setLineWidth(selectedPolygon.getStrokeWidth());
+        gc.strokePolygon(getXPoints(), getYPoints(), getNumPoints());
+    }
+
+    public void draw(GraphicsContext gc) {
+        gc.setFill(getFill());
+        gc.setStroke(getStroke());
+        gc.setLineWidth(getStrokeWidth());
+        gc.fillPolygon(getXPoints(), getYPoints(), getNumPoints());
+        gc.strokePolygon(getXPoints(), getYPoints(), getNumPoints());
+
+        // Now draw the overlay
+        if (overlay != null && overlay.isVisible()) {
+            gc.setGlobalAlpha(overlay.opacityProperty().get());
+
+            gc.setFill(overlay.getFill());
+            gc.setStroke(overlay.getStroke());
+            gc.setLineWidth(overlay.getStrokeWidth());
+            
+            // We are not drawing the overlay object itself - we are drawing the overlay on OUR shape
+            // so we don't care where the overlay "actually is" and we don't need to
+            // maintain that "position" this is just a data holder
+            gc.fillPolygon(getXPoints(), getYPoints(), getNumPoints());
+            gc.strokePolygon(getXPoints(), getYPoints(), getNumPoints());
+    
+            gc.setGlobalAlpha(1.0);
+        }
+        
+        // Finally the text
+        gc.setStroke(Color.BLACK);
+        gc.setFill(Color.BLACK);
+        if (getShapeStr() != null && getShapeStr().equals("") == false) {
+            gc.fillText(getShapeStr(), getCenterX() - 5, getCenterY() + 5);
+        }
     }
 }

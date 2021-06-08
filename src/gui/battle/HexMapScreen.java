@@ -3,65 +3,24 @@ package dfsim.gui;
 
 import java.io.*;
 import java.util.*;
-import java.util.ArrayList;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.KeyCode;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.RowConstraints;
-import javafx.stage.Stage;
-/*import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.Button;
-import javafx.scene.control.MenuBar;*/
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
-import javafx.scene.Node;
-import javafx.geometry.Pos;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.scene.control.ListView;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.ListChangeListener;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
-import javafx.scene.web.HTMLEditor;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.Priority;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.Image;
+import javafx.event.*;
+import javafx.beans.value.*;
+import javafx.scene.input.*;
+import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.TextAlignment;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.ListProperty;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import javafx.geometry.*;
+import javafx.collections.*;
+import javafx.scene.paint.*;
+import javafx.scene.text.*;
+import javafx.scene.web.*;
+import javafx.scene.effect.*;
+import javafx.scene.image.*;
+import javafx.scene.control.*;
+import javafx.beans.binding.*;
+import javafx.beans.property.*;
 
 import dfsim.*;
 
@@ -70,9 +29,6 @@ public class HexMapScreen extends DfScreen {
     public static int topAreaHeight = 500;
 
     public static HexMap hexMap;
-
-    public ArrayList<HexMapEntity> partyEntities;
-    public ArrayList<HexMapEntity> monsEntities; 
 
     private HexMapScreen thisScreen;
 
@@ -94,18 +50,18 @@ public class HexMapScreen extends DfScreen {
 
     public TextArea mainTextArea;
 
+    private DfCanvas canvas;
+
     public HexMapScreen(BorderPane root, int wid, int hgt) {
         super(root, wid, hgt);
+        canvas = new DfCanvas(wid, hgt);
         thisScreen = this;
         createBuildingBlocks();
         createMainScene();
     }
 
     public void createBuildingBlocks() {
-        hexMap = new HexMap();
-
-        partyEntities = new ArrayList<HexMapEntity>();
-        monsEntities = new ArrayList<HexMapEntity>();
+        hexMap = new HexMap(this);
 
         rightListViewStrings = new ArrayList<>();
         leftListViewStrings = new ArrayList<>();
@@ -120,12 +76,12 @@ public class HexMapScreen extends DfScreen {
         //scene.getStylesheets().add(getClass().getResource("css/naru.main.css").toExternalForm());
         getStylesheets().add("css/dfsim.main.css");
 
-        setOnKeyReleased(new EventHandler<KeyEvent>() {
+        /*setOnKeyReleased(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
                 processKeyRelease(keyEvent.getCode());
             }
-        });
+        });*/
     }
 
     public void setBorders() {
@@ -170,7 +126,9 @@ public class HexMapScreen extends DfScreen {
         //topArea.setPadding(new Insets(10, 10, 10, 10));
         //topArea.setAlignment(Pos.CENTER);
         //topArea.setSpacing(10);
-        hexMap.addToPane(topArea);
+        topArea.getChildren().add(canvas);
+        hexMap.addToCanvas(canvas);
+        //hexMap.addToPane(topArea);
     }
 
     public void appendText(String text) {
@@ -228,7 +186,7 @@ public class HexMapScreen extends DfScreen {
                     String str = leftListView.getSelectionModel().getSelectedItem();
                     DfMon mon = Data.getDfMonByName(str);
                     if (mon != null) {
-                        addMonHexMapEntity(mon);
+                        hexMap.addMonHexMapEntity(mon);
                     }
                 }
             }
@@ -258,7 +216,7 @@ public class HexMapScreen extends DfScreen {
                     String str = rightListView.getSelectionModel().getSelectedItem();
                     Person pers = Data.getPersonByName(str);
                     if (pers != null) {
-                        addPartyMemberHexMapEntity(pers);
+                        hexMap.addPartyMemberHexMapEntity(pers);
                     }
                 }
             }
@@ -266,6 +224,7 @@ public class HexMapScreen extends DfScreen {
     }
 
     public void processKeyRelease(KeyCode key) {
+        super.processKeyRelease(key);
         if (DfSim.noInput == true) {
             return;
         }
@@ -346,7 +305,7 @@ public class HexMapScreen extends DfScreen {
     }
 
     public void load() {
-        reset();
+        hexMap.reset();
 
         // Now populate our lists with the stuff
         for (Person person : Data.personList) {
@@ -360,151 +319,14 @@ public class HexMapScreen extends DfScreen {
         rightListProperty.set(FXCollections.observableArrayList(rightListViewStrings));
         leftListProperty.set(FXCollections.observableArrayList(leftListViewStrings));
     }
-
-    public void addParty(ArrayList<Person> party) {
-        removeAllPartyMembers();
-        for (Person person : party) {
-            addPartyMemberHexMapEntity(person);
-        }
-    }
-
-    public void addMons(ArrayList<DfMon> mons) {
-        removeAllMons();
-        for (DfMon mon : mons) {
-            addMonHexMapEntity(mon);
-        }
-    }
-
-    public void addPartyMemberHexMapEntity(Person person) {
-        HexMapEntity ent = new HexMapEntity(person);
-
-        int x = 10;
-        int y = 10;
-        
-        if (partyEntities.size() > 0) {
-            // If we have current party entities, find a random spot
-            // to place this person based on where current party is.
-            // Pick a random person, then a random direction
-            int num = Utils.number(0, partyEntities.size()-1);
-            HexMapEntity e = partyEntities.get(num);
-            HexMapTile eHex = e.getHex();
-            // Should not be null but check just in case...
-            if (eHex != null) {
-                // False means we do not allow a null tile
-                HexMapTile nextHex = eHex.getTileInRandomDir(false);
-                int dist = Utils.number(0, 2); // Within 3 spaces
-                while (dist > 0) {
-                    dist--;
-                    nextHex = nextHex.getTileInRandomDir(false);
-                    // No going back to our original tile.
-                    while (nextHex == eHex) {
-                        nextHex = nextHex.getTileInRandomDir(false);
-                    }
-                }
-                // Should never be null...
-                if (nextHex != null) {
-                    x = nextHex.hexMapX;
-                    y = nextHex.hexMapY;
-                }
-            }
-        }
-        else {
-            // If not, just do it totally at random.
-            x = Utils.number(1, hexMap.numX - 1);
-            y = Utils.number(1, hexMap.numY - 1);
-        }
-        HexMapTile hex = hexMap.getAt(x, y);
-        hex.attach(ent);
-
-        partyEntities.add(ent);
-        // Really we should be inserting these at an appropriate place
-        ent.addToPane(topArea);
-    }
-
-    public void addMonHexMapEntity(DfMon mon) {
-        HexMapEntity ent = new HexMapEntity(mon);
-        monsEntities.add(ent);
-        int x = Utils.number(1, hexMap.numX - 1);
-        int y = Utils.number(1, hexMap.numY - 1);
-        HexMapTile hex = hexMap.getAt(x, y);
-        hex.attach(ent);
-        ent.addToPane(topArea);
-    }
-
-    public void removeAllPartyMembers() {
-        for (int i = partyEntities.size()-1; i >= 0; i--) {
-            HexMapEntity ent = partyEntities.get(i);
-            removeHexMapEntity(ent);
-        }
-        partyEntities.clear();
-    }
-
-    public void removeAllMons() {
-        for (int i = monsEntities.size()-1; i >= 0; i--) {
-            HexMapEntity ent = monsEntities.get(i);
-            removeHexMapEntity(ent);
-        }
-        monsEntities.clear();
-    }
-
-    public void removeAllEntities() {
-        removeAllPartyMembers();
-        removeAllMons();
-    }
-
-    public void removeHexMapEntity(HexMapEntity ent) {
-        ent.removeFromPane(topArea);
-        if (ent.getHex() != null) {
-            ent.getHex().detach();
-        }
-        if (ent == DfSim.sim.selectedHexMapEntity) {
-            DfSim.sim.deselect();
-        }
-
-        monsEntities.remove(ent);
-        partyEntities.remove(ent);
-    }
-
-    public void resetTurnMovs() {
-        for (HexMapEntity ent : partyEntities) {
-            ent.turnMovDone = false;
-        }
-        for (HexMapEntity ent : monsEntities) {
-            ent.turnMovDone = false;
-        }
-    }
-
-    public void resetTurnAtks() {
-        for (HexMapEntity ent : partyEntities) {
-            ent.turnAtkDone = false;
-        }
-        for (HexMapEntity ent : monsEntities) {
-            ent.turnAtkDone = false;
-        }
-    }
-
-    public void reset() {
-        // remove the entities
-        removeAllEntities();
-
-        // regenerate the map
-        hexMap.randomizeTerrain();
-    }
-
-    public void onClickHexMapEntity(HexMapEntity ent) {
-        // Show the movable tiles
-        // So firstly clear all movable tiles
-        hexMap.clearCanMoveTo();
-
-        if (ent.turnMovDone == true)
+    
+    public void updateOneFrame() {
+        if (isActive() == false) {
             return;
-
-        // Now set the tiles that can be moved to
-        if (ent.mon != null) {
-            hexMap.setCanMoveTo(ent.getHex(), ent.mon.getMov());
         }
-        else if (ent.partyMember != null) {
-            hexMap.setCanMoveTo(ent.getHex(), ent.partyMember.getMov());
+
+        if (canvas != null) {
+            canvas.updateOneFrame();
         }
     }
 }

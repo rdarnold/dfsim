@@ -57,7 +57,7 @@ public class LandMapTile extends DfSquareTile {
     private LandRegion region; // The region this tile is associated with
 
     public LandMapTile(LandMap theMap) {
-        super();
+        super(theMap);
         map = theMap;
         init();
     }
@@ -163,7 +163,7 @@ public class LandMapTile extends DfSquareTile {
         return (LandMapTile)super.getAdjacentTileForNumber(dir);
     }
 
-    @Override
+    /*@Override
     protected void handleMouseEnter(Object objTile, MouseEvent event) {
         if (objTile == null) 
             return;
@@ -182,7 +182,7 @@ public class LandMapTile extends DfSquareTile {
         else {
             map.onRightClickTile(tile);
         }
-    }
+    }*/
 
     private void init() {
         /*shapeText.setUserData(this);

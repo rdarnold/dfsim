@@ -154,7 +154,7 @@ public class LandMapScreen extends DfScreen {
         if (DfSim.noInput == true) {
             return;
         }
-        switch (key) {
+        /*switch (key) {
             case RIGHT:
                 landMap.onRightArrow();
                 break;
@@ -167,11 +167,12 @@ public class LandMapScreen extends DfScreen {
             case DOWN:
                 landMap.onDownArrow();
                 break;
-        }
+        }*/
     }
 
     @Override
     public void processKeyRelease(KeyCode key) {
+        super.processKeyRelease(key);
         if (DfSim.noInput == true) {
             return;
         }
@@ -194,9 +195,31 @@ public class LandMapScreen extends DfScreen {
         }
     }
 
+    // Update based on inputs such as keys being held down,
+    // etc.
+    public void updateInput() {
+        if (DfSim.noInput == true) {
+            return;
+        }
+        if (isArrowRightPressed() == true || isDPressed() == true) {
+            landMap.onRightArrow();
+        }
+        if (isArrowLeftPressed() == true || isAPressed() == true) {
+            landMap.onLeftArrow();
+        }
+        if (isArrowUpPressed() == true || isWPressed() == true) {
+            landMap.onUpArrow();
+        }
+        if (isArrowDownPressed() == true || isSPressed() == true) {
+            landMap.onDownArrow();
+        }
+    }
+
     public void updateOneFrame() {
         if (canvas != null) {
             canvas.updateOneFrame();
         }
+
+        updateInput();
     }
 }

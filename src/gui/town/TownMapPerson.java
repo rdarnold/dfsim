@@ -25,6 +25,9 @@ import javafx.beans.property.ObjectProperty;
 import dfsim.*;
 import dfsim.gui.*;
 
+// Confusing name, the "Person" class is different than entity.
+// Person holds data that persists in different contexts while entities
+// only exist in their specific maps.  This should be renamed.
 public class TownMapPerson extends TownMapEntity {
 
     // Has this person been discovered or not?  If so,
@@ -39,7 +42,7 @@ public class TownMapPerson extends TownMapEntity {
         init();
     }
 
-    @Override
+    /*@Override
     protected void handleMouseEnter(Object objEnt, MouseEvent event) {
         if (objEnt == null) 
             return;
@@ -58,7 +61,7 @@ public class TownMapPerson extends TownMapEntity {
         else {
             getMap().onRightClickPerson(ent);
         }
-    }
+    }*/
 
     private void init() {
 

@@ -5,12 +5,9 @@ import java.util.ArrayList;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.*;
+
+import javafx.scene.canvas.*;
 
 import dfsim.gui.*;
 
@@ -135,6 +132,8 @@ public class TownMap extends DfSquareMap {
                 tilesArray.add(tile);
             }
         }
+        // Set the base class pointer to the tile array
+        super.squareTiles = tiles;
         
         updateDirections();
         randomizeTerrain();
@@ -143,9 +142,9 @@ public class TownMap extends DfSquareMap {
         avatar = new TownMapAvatar(this);
         tilesArray.get(0).attach(avatar);
 
-        if (pane != null) {
-            addToPane(pane);
-        }
+        //if (pane != null) {
+        //    addToPane(pane);
+        //}
         moveTilesToCorrectPositions();
     }
 
@@ -154,6 +153,8 @@ public class TownMap extends DfSquareMap {
     }
 
     public void start(Constants.Dir dir) {
+        avatar.setPerson(Data.personList.get(0));
+
         // Stick us in the middle
         avatar.unrestrictedMoveTo(DfSim.townMapScreen.wid/2, DfSim.townMapScreen.hgt/2);
 
@@ -312,7 +313,7 @@ public class TownMap extends DfSquareMap {
         }
     }
     
-    public void addToPane(Pane thePane) {
+    /*public void addToPane(Pane thePane) {
         pane = thePane;
 
         // Add and move the
@@ -323,7 +324,7 @@ public class TownMap extends DfSquareMap {
         for (TownMapPerson pers : people) {
             pers.addToPane(pane);
         }
-    }
+    }*/
 
     public void removeFromPane() {
         if (pane == null)
@@ -363,6 +364,7 @@ public class TownMap extends DfSquareMap {
     
     @Override
     protected void onMoveFinished() {
+        super.onMoveFinished();
         TownMapTile tile = avatar.getTile();
         if (tile.getType() == TileType.Door) {
             // Enter a building
@@ -393,8 +395,11 @@ public class TownMap extends DfSquareMap {
         if (ent != null) {
             if (ent.getType() == DfSquareMapEntity.EntityType.Person) {
                 TownMapPerson pers = (TownMapPerson)ent;
-                Utils.log("Interacted with " + pers.person.toStringNPC());
-                pers.person.setMet(true);
+                Utils.log("Interacted with " + pers.getPerson().toStringNPC());
+                pers.getPerson().setMet(true);
+                
+                // Set facing; it'll always be the revdir of the char facing
+                pers.setFacing(Constants.Dir.revDir(avatar.getFacing()));
 
                 // From the back, perhaps some options could be:
                 // Talk
@@ -428,7 +433,9 @@ public class TownMap extends DfSquareMap {
     public void onDownArrow() {
         moveAvatarByInput(Constants.Dir.SOUTH);
     }
-    public void onD() {
+
+    // WASD calls the above functions instead.
+    /*public void onD() {
         moveAvatarByInput(Constants.Dir.EAST);
     }
     public void onA() {
@@ -439,7 +446,7 @@ public class TownMap extends DfSquareMap {
     }
     public void onS() {
         moveAvatarByInput(Constants.Dir.SOUTH);
-    }
+    }*/
     
     public void onF() {
         interact();
@@ -995,7 +1002,7 @@ public class TownMap extends DfSquareMap {
 
     public void placeOneTownPerson(Person person) {
         TownMapPerson pers = new TownMapPerson(this);
-        pers.person = person; // Confusing line...
+        pers.setPerson(person);
         pers.translateXProperty().bind(xOffset);
         pers.translateYProperty().bind(yOffset);
         people.add(pers);
@@ -1100,5 +1107,52 @@ public class TownMap extends DfSquareMap {
 
         // Finally, place some people around the town.
         generatePeople();
+    }
+    
+    @Override
+    public void onLeftClick(double x, double y) {
+        TownMapTile tile = (TownMapTile)getTileForClick(x, y);
+        if (tile != null) {
+            onLeftClickTile(tile);
+        }
+    }
+
+    @Override
+    public void onRightClick(double x, double y) {
+        TownMapTile tile = (TownMapTile)getTileForClick(x, y);
+        if (tile != null) {
+            onRightClickTile(tile);
+        }
+    }
+
+    @Override
+    public void onLeftPressed(double x, double y) { }
+
+    @Override
+    public void onRightPressed(double x, double y) { }
+    
+    @Override
+    public void onLeftDragged(double x, double y) { }
+
+    @Override
+    public void onRightDragged(double x, double y) { }
+    
+    @Override
+    public void onMouseMove(double x, double y) { }
+    
+    @Override
+    public void draw(GraphicsContext gc) {
+        // Draw all the visible tiles (tile knows if it's visible or not)
+        for (TownMapTile tile : tilesArray) {
+            tile.draw(gc);
+        }
+        
+        // Draw the mobiles
+        for (TownMapPerson p : people) {
+            p.draw(gc);
+        }
+
+        // Draw the avatar
+        avatar.draw(gc);
     }
 }

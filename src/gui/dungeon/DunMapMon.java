@@ -35,7 +35,8 @@ public class DunMapMon extends DunMapEntity {
     private void init() {
     }
 
-    @Override
+    // Deprecated...
+    /*@Override
     protected void handleMouseEnter(Object objEnt, MouseEvent event) {
         if (objEnt == null) 
             return;
@@ -54,7 +55,7 @@ public class DunMapMon extends DunMapEntity {
         else {
             getMap().onRightClickMon(ent);
         }
-    }
+    }*/
 
     public boolean canMoveToTile(DunMapTile tile) {
         if (tile == null || tile.canBeMovedTo() == false) {

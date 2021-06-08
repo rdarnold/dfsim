@@ -59,12 +59,13 @@ public class TownMapTile extends DfSquareTile {
     public void revertType() { type = prevType; }
 
     public TownMapTile(TownMap theMap) {
-        super();
+        super(theMap);
         map = theMap;
         init();
     }
 
-    @Override
+    // These are now deprecated when using canvas...
+    /*@Override
     protected void handleMouseEnter(Object objTile, MouseEvent event) {
         if (objTile == null) 
             return;
@@ -83,7 +84,7 @@ public class TownMapTile extends DfSquareTile {
         else {
             map.onRightClickTile(tile);
         }
-    }
+    }*/
 
     private void init() {
 
@@ -179,5 +180,30 @@ public class TownMapTile extends DfSquareTile {
             case WoodWall:  setFill(Color.SIENNA); break;
             case Door:      setFill(Color.BLACK); break;
         }
+    }
+
+    public void draw(GraphicsContext gc) {
+        drawNoGraphics(gc);
+
+        // Only draw if we are visible
+        /*double drawX = getX() + map.getXOffset();
+        double drawY = getY() + map.getYOffset();
+
+        if (drawX > DfSim.width || drawX < (0 - getWidth()) || drawY > DfSim.height || drawY < (0 - getHeight())) {
+            return;
+        }
+
+        if (Constants.ENABLE_TILE_GRAPHICS == false || gs == null) {
+            drawNoGraphics(gc);
+            return;
+        }
+
+        // If it has a background, draw that first
+        if (bgrdSprite != null) {
+            bgrdSprite.drawFrameByIndex(gc, bgrdSpriteFrameIndex, drawX, drawY, getWidth(), getHeight());
+        }
+
+        //gc.drawImage(img, 10, 10, 50, 50, getX(), getX(), getWidth(), getHeight());
+        gs.drawFrameByIndex(gc, spriteFrameIndex, drawX, drawY, getWidth(), getHeight());*/
     }
 }

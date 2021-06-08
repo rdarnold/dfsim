@@ -16,7 +16,7 @@ import javafx.util.Duration;
 
 import dfsim.*;
 
-public class HexMapTile extends HexMapEntity {
+public class HexMapTile extends MovablePolygon {
 
     public enum HexTileType {
         Blank,
@@ -38,6 +38,8 @@ public class HexMapTile extends HexMapEntity {
     int hexMapY = 0;
     int tileNum = 0;
     public int getTileNumber() { return tileNum; }
+
+    private HexMap hexMap;
 
     public HexMapEntity contains; // does this HexMapTile contain someone / another HexMapEntity?
     public boolean containsHexMapEntity(HexMapEntity ent) {
@@ -72,18 +74,38 @@ public class HexMapTile extends HexMapEntity {
     public HexTileType getType() { return type; }
 
 
-    public HexMapTile() {
+    public HexMapTile(HexMap map) {
         super();
-        setupMouseHandler();
+        hexMap = map;
+        //setupMouseHandler();
+        
+        // We do not want this to be "visible" in the traditional sense because
+        // we do not draw it with the scene graph, it is drawn through the canvas
+        // manually.  We also do not want these to capture mouse clicks because those,
+        // too, are handled manually.
+        setVisible(false);
+        shapeText.setVisible(false);
+        overlay.setVisible(false);
+        setMouseTransparent(true);
+        shapeText.setMouseTransparent(true);
+        overlay.setMouseTransparent(true);
+        
+        shapeText.setUserData(this);
+        getSelectedCircle().setUserData(this);
+        overlay.setUserData(this);
+        getSelectedPolygon().setUserData(this);
+
+        makeShape(6);
     }
 
-    private void handleMouseEnter(Object objHex, MouseEvent event) {
+    /*private void handleMouseEnter(Object objHex, MouseEvent event) {
         if (objHex == null) 
             return;
         HexMapTile hex = (HexMapTile)objHex;
         DfSim.sim.onMouseEnterHexMapTile(hex);
     }
 
+    // Deprecated... it's not handled here anymore
     private void handleClick(Object objHex, MouseEvent event) {
         if (objHex == null) 
             return;
@@ -96,6 +118,7 @@ public class HexMapTile extends HexMapEntity {
         }
     }
 
+    // Deprecated... it's not handled here anymore
     private void setupMouseHandler() {
         
         // Override the HexMapEntity clicks with these ones.
@@ -176,18 +199,20 @@ public class HexMapTile extends HexMapEntity {
                 handleMouseEnter(source.getUserData(), event);
             }
         });
-    }
+    }*/
 
     public boolean attach(HexMapEntity ent) {
         if (contains != null) {
             return false;
         }
-        if (ent.getHex() != null) {
+        /*if (ent.getHex() != null) {
             ent.getHex().detach();
-        }
+        }*/
+        contains = null;
+        ent.moveToTile(this);
         //ent.centerOn(this);
-        pullTo(ent);
-        ent.setHex(this);
+        //pullTo(ent);
+        //ent.setHex(this);
         contains = ent;
         return true;
     }
@@ -195,25 +220,26 @@ public class HexMapTile extends HexMapEntity {
     public void detach() {
         if (contains != null) {
             contains.setHex(null);
+            contains.setPrevHex(null);
         }
         contains = null;
     }
 
-    private void addCurMovPathTilesToMovement(Path path) {
+    /*private void addCurMovPathTilesToMovement(Path path) {
         // And follow a move path if we have one
-        HexMapTile hex = DfSim.hexMapScreen.hexMap.getNextCurMovPathTile();
+        HexMapTile hex = hexMap.getNextCurMovPathTile();
         while (hex != null) {
             hex.setCurMovPath(false);
             hex.setCurMovStep(0);
             path.getElements().add(new LineTo(hex.getCenterX(), hex.getCenterY()));
-            hex = DfSim.hexMapScreen.hexMap.getNextCurMovPathTile();
+            hex = hexMap.getNextCurMovPathTile();
         }
-    }
+    }*/
 
     public void pullTo(HexMapEntity ent) {
-        ent.turnMovDone = true;
-        int steps = DfSim.hexMapScreen.hexMap.countCurMovPathTiles();
-        Path path = new Path();
+        //ent.turnMovDone = true;
+        //ent.moveToTile(this);
+        /*Path path = new Path();
         path.getElements().add(new MoveTo(ent.getTranslateX(), ent.getTranslateY())); 
         addCurMovPathTilesToMovement(path);
         path.getElements().add(new LineTo(getCenterX(), getCenterY()));
@@ -226,20 +252,23 @@ public class HexMapTile extends HexMapEntity {
         //path.getElements().add(new CubicCurveTo(380, 0, 380, 120, 200, 120));
         //path.getElements().add(new CubicCurveTo(0, 120, 0, 240, 380, 240));
         PathTransition pathTransition = new PathTransition();
-        /*pathTransition.setDuration(Duration.millis(4000));
-        pathTransition.setPath(path);
-        pathTransition.setNode(rectPath);
-        pathTransition.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
-        pathTransition.setCycleCount(Timeline.INDEFINITE);
-        pathTransition.setAutoReverse(true);*/
+        pathTransition.setDuration(Duration.millis(4000));
+        //pathTransition.setPath(path);
+        //pathTransition.setNode(rectPath);
+        //pathTransition.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
+        //pathTransition.setCycleCount(Timeline.INDEFINITE);
+        //pathTransition.setAutoReverse(true);
+        //pathTransition.setOrientation(OrientationType.ORTHOGONAL_TO_TANGENT);
+        //pathTransition.setAutoReverse(true);
+
         pathTransition.setDuration(Duration.millis(dist * 5));
         pathTransition.setNode(ent);
         pathTransition.setPath(path);
-        //pathTransition.setOrientation(OrientationType.ORTHOGONAL_TO_TANGENT);
         pathTransition.setCycleCount(1);
-        //pathTransition.setAutoReverse(true);
+        pathTransition.play();*/
 
-        pathTransition.play();
+        //ent.moveTo(getCenterX(), getCenterY());
+        //ent.moveTo(this);
     }
 
     public HexMapTile getTileInRandomDir() {
@@ -278,7 +307,6 @@ public class HexMapTile extends HexMapEntity {
         if (south     != null && south.containsHexMapEntity(selected) == true)     num++;
         if (southeast != null && southeast.containsHexMapEntity(selected) == true) num++;
         return num;
-
     }
 
     public int numberAdjacentWaterTiles() {
@@ -401,5 +429,33 @@ public class HexMapTile extends HexMapEntity {
                 overlay.opacityProperty().set(0.6);
             }
         }
+    }
+    
+    @Override
+    public void draw(GraphicsContext gc) {
+
+        // If no graphics, call base class
+        super.draw(gc);
+
+        // Only draw if we are visible
+        /*double drawX = getX() + map.getXOffset();
+        double drawY = getY() + map.getYOffset();
+
+        if (drawX > DfSim.width || drawX < (0 - getWidth()) || drawY > DfSim.height || drawY < (0 - getHeight())) {
+            return;
+        }
+
+        if (Constants.ENABLE_TILE_GRAPHICS == false || gs == null) {
+            drawNoGraphics(gc);
+            return;
+        }
+
+        // If it has a background, draw that first
+        if (bgrdSprite != null) {
+            bgrdSprite.drawFrameByIndex(gc, bgrdSpriteFrameIndex, drawX, drawY, getWidth(), getHeight());
+        }
+
+        //gc.drawImage(img, 10, 10, 50, 50, getX(), getX(), getWidth(), getHeight());
+        gs.drawFrameByIndex(gc, spriteFrameIndex, drawX, drawY, getWidth(), getHeight());*/
     }
 }
