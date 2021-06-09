@@ -1,30 +1,26 @@
 
 package dfsim;
 
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
-import javafx.scene.control.Button;
-import javafx.geometry.Point2D;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import java.util.*;
+import java.util.concurrent.*;
+import javafx.geometry.*;
+import javafx.scene.shape.*;
+import javafx.scene.layout.*;
 import java.io.*; 
+import java.nio.file.*;
 import java.net.*; // To get the mac address
 import java.security.*;
-import java.util.Enumeration;
+
+import javax.json.*;
+import javax.json.stream.*;
+
 
 // GUI stuff
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.Button;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.event.EventHandler;
-import javafx.scene.text.Text;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.control.Label;
-import javafx.scene.control.Accordion;
-import javafx.scene.control.TitledPane;
+import javafx.scene.text.*;
+import javafx.scene.control.*;
 
 // This is essentially like a static class in C#
 public final class Utils {
@@ -378,5 +374,145 @@ public final class Utils {
                 }
             }
         });
+    }
+
+    public static String getFileExtensionFromName(String fileName) {
+        return fileName.substring(fileName.lastIndexOf('.') + 1);
+    }
+
+    // String newStr = replaceFileExtensionWith(oldStr, "jpg");
+    public static String replaceFileExtensionWith(String inputStr, String newExtension) {
+        if (inputStr == null || inputStr == "" || inputStr.contains(".") == false) {
+            return null;
+        }
+        return (removeFileExtension(inputStr) + "." + newExtension);
+    }
+    
+    public static String removeFileExtension(String s) {
+        String separator = System.getProperty("file.separator");
+        String filename;
+
+        // Remove the path upto the filename.
+        int lastSeparatorIndex = s.lastIndexOf(separator);
+        if (lastSeparatorIndex == -1) {
+            filename = s;
+        } else {
+            filename = s.substring(lastSeparatorIndex + 1);
+        }
+
+        // Remove the extension.
+        int extensionIndex = filename.lastIndexOf(".");
+        if (extensionIndex == -1)
+            return filename;
+
+        return filename.substring(0, extensionIndex);
+    }
+
+    public static boolean stringStartsWith(String str, String strStartsWith) {
+        if (str == null || strStartsWith == null || str.equals("") == true || strStartsWith.equals("") == true) {
+            return false;
+        }
+        if (str.length() >= strStartsWith.length() && str.substring(0, strStartsWith.length()).equals(strStartsWith)) {
+            return true;
+        }
+        return false;
+    }
+    
+    public static String readFile(String fileName) {
+        return readFile(fileName, true);
+    }
+
+    public static String readFile(String fileName, boolean printLog) {
+        try {
+            // Man, Java sucks here.  We can't check Files.exists using the same
+            // path as we use to read the file !!  we have to actually strip off
+            // the first slash or it will give false negative...
+            //String existsPath = fileName.substring(1, fileName.length());
+
+            // Strange, that is not the case in dfsim...
+            String existsPath = fileName;
+            if (Files.exists(Paths.get(existsPath)) == false) {
+                if (printLog == true) {
+                    Utils.log("readFile: " + existsPath + " not found");
+                }
+                return null;
+            }
+            //BufferedReader reader = new BufferedReader(new FileReader (file));
+            // This way works both inside and outside of a jar file.  Using a File as
+            // above does not.
+            if (printLog == true) {
+                Utils.log("readFile: " + fileName);
+            }
+            
+            // Strange, need to do FileInputStream to make it work in dfsim...
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(fileName)));//Utils.class.getResourceAsStream(fileName)));
+
+            String         line = null;
+            StringBuilder  stringBuilder = new StringBuilder();
+            String         ls = System.getProperty("line.separator");
+
+            try {
+                while((line = reader.readLine()) != null) {
+                    stringBuilder.append(line);
+                    stringBuilder.append(ls);
+                }
+
+                return stringBuilder.toString();
+            } finally {
+                reader.close();
+            }
+        } catch (IOException e) {
+            Utils.err("Failed to read file " + fileName);
+            err();
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    // If we're done parsing in an array, we may want to move past the array
+    // end so that we can get to the next thing.
+    public static void moveToEndOfJsonArray(JsonParser parser) {
+        while (parser.hasNext()) {
+            JsonParser.Event event = parser.next();
+            if (event == JsonParser.Event.END_ARRAY) {
+                return;
+            }
+	    }
+    }
+    
+    // This is so stupid, I cant believe these methods arent built into the parser,
+    // the java JsonParser class SUCKS.
+    public static String getNextJsonValueAsString(JsonParser parser ) {
+        while (parser.hasNext()) {
+            JsonParser.Event event = parser.next();
+            if (event == JsonParser.Event.VALUE_STRING ||
+                event == JsonParser.Event.VALUE_NUMBER) {
+                return parser.getString();
+            }
+	    }
+        return null;
+    }
+
+    public static double getNextJsonValueAsDouble(JsonParser parser) {
+        while (parser.hasNext()) {
+            JsonParser.Event event = parser.next();
+            if (event == JsonParser.Event.VALUE_STRING ||
+                event == JsonParser.Event.VALUE_NUMBER) {
+                return Utils.tryParseDouble(parser.getString());
+            }
+	    }
+        return 0;
+    }
+
+    public static int getNextJsonValueAsInt(JsonParser parser) {
+        while (parser.hasNext()) {
+            JsonParser.Event event = parser.next();
+            if (event == JsonParser.Event.VALUE_STRING ||
+                event == JsonParser.Event.VALUE_NUMBER) {
+                return Utils.tryParseInt(parser.getString());
+            }
+	    }
+        return 0;
     }
 }

@@ -1,20 +1,18 @@
 
 package dfsim;
 
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
-import javafx.scene.image.Image;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.paint.Color;
+import javafx.scene.shape.*;
+import javafx.scene.image.*;
+import javafx.scene.effect.*;
+import javafx.scene.paint.*;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*; 
+import java.nio.file.*;
+
+import javax.json.*;
+import javax.json.stream.*;
 
 import dfsim.gui.*;
 
@@ -24,8 +22,182 @@ public final class GraphicsLoader {
     private GraphicsLoader() { // private constructor
     }
 
+    // Check if the file is valid, right now we just make sure
+    // the extension is a png.
+    public static boolean fileIsValidImage(String fileName) {
+        String ext = Utils.getFileExtensionFromName(fileName);
+        if (ext == null || ext.length() <= 0) {
+            return false;
+        }
+        if (ext.equals("png") || ext.equals("jpg") || ext.equals("jpeg") || ext.equals("bmp") || ext.equals("gif")) {
+            return true;
+        }
+        return false;
+    }
+
+    // Can use "plus" to add 1 to the value of plusVal
+    // Can use "same" to use the same value as sameVal
+    // Can use "width" to say it's the full width of the sprite
+    // Can use "height" to say it's the full height of the sprite
+    public static double parseJsonSpriteObj(JsonParser parser, CharSprite sprite, double plusVal, double sameVal) {
+        String str = Utils.getNextJsonValueAsString(parser);
+        if (str != null && str.length() > 0) {
+            if (str.equals("same")) {
+                return sameVal;
+            }
+            else if (str.equals("plus")) {
+                return plusVal + 1;
+            }
+            else if (str.equals("width")) {
+                return sprite.getImage().getWidth();
+            }
+            else if (str.equals("height")) {
+                return sprite.getImage().getHeight();
+            }
+        }
+        return (Utils.tryParseDouble(str)); //Utils.getNextJsonValueAsDouble(parser));
+    }
+
+    // Check if a sprite has an associated data sheet.  This sheet
+    // tells us if we should be sub-dividing into sub-sheets and what
+    // the dimensions are of each one.
+    public static int loadJsonSpriteData(CharSprite sprite, ArrayList<CharSprite> spriteList) {
+        int nLoaded = 0;
+        if (sprite == null) {
+            return nLoaded;
+        } 
+        if (sprite.getFileName() == null || sprite.getFileName() == "" || sprite.getFileName().contains(".") == false) {
+            spriteList.add(sprite);
+            return nLoaded;
+        }
+
+        // Just replace the extension of .png with .json
+        String fileName = Utils.replaceFileExtensionWith(sprite.getFileName(), "json");
+
+        // Read the raw text into a string.
+        String jsonData = Utils.readFile(fileName, false);
+
+        if (jsonData == null || jsonData.length() <= 0) {
+            spriteList.add(sprite);
+            return nLoaded;
+        }
+
+        // Parse the JSON data.
+        CharSprite newSprite = null;
+        double lastStartX = 0;
+        double lastStartY = 0;
+        double lastEndX = 0;
+        double lastEndY = 0;
+
+        JsonParser parser = Json.createParser(new StringReader(jsonData));
+        while (parser.hasNext()) {
+            JsonParser.Event event = parser.next();
+            switch (event) {
+                case START_ARRAY:
+                    break;
+                case END_ARRAY:
+                    if (newSprite != null) {
+                        // Sprite done, add it and move on.
+                        newSprite = null;
+                        //Utils.log("Done with sprite");
+                    } 
+                    break;
+                case START_OBJECT:
+                case END_OBJECT:
+                case VALUE_FALSE:
+                case VALUE_NULL:
+                case VALUE_TRUE:
+                    //System.out.println(event.toString());
+                    break;
+                case KEY_NAME:
+                    if (parser.getString().contains("sprite")) {
+                        newSprite = new CharSprite(sprite);
+                        spriteList.add(newSprite);
+                        nLoaded++;
+                    }
+                    if (newSprite != null) {
+                        if (parser.getString().equals("name")) {
+                            newSprite.setSpriteKey(Utils.getNextJsonValueAsString(parser));
+                            //Utils.log("name: " +  newSprite.getSpriteKey());
+                        }
+
+                        // Can say "plus" to add 1 to the value of the last end
+                        // Can say "same" to use the same value as last one
+                        // Can use "width" to say it's the full width of the sprite
+                        // Can use "height" to say it's the full height of the sprite
+                        else if (parser.getString().equals("startx")) {
+                            newSprite.setWithinImageX(parseJsonSpriteObj(parser, newSprite, lastEndX, lastStartX));
+                            lastStartX = newSprite.getWithinImageX();
+
+                            // Automatically size to the edge of the image unless we are told otherwise with endx later
+                            newSprite.setWithinImageWidth(newSprite.getWithinImageWidth() - newSprite.getWithinImageX());
+                            //Utils.log("startx: " + newSprite.getWithinImageX());
+                        }
+                        else if (parser.getString().equals("starty")) {
+                            newSprite.setWithinImageY(parseJsonSpriteObj(parser, newSprite, lastEndY, lastStartY));
+                            //newSprite.setWithinImageY(Utils.getNextJsonValueAsInt(parser));
+
+                            lastStartX = newSprite.getWithinImageY();
+                            
+                            // Automatically size to the edge of the image unless we are told otherwise with endy later
+                            newSprite.setWithinImageHeight(newSprite.getWithinImageHeight() - newSprite.getWithinImageY());
+                            //Utils.log("starty: " + newSprite.getWithinImageY());
+                        }
+                        else if (parser.getString().equals("endx")) {
+                            // "plus" doesn't really make sense in this context so just pass it as same value
+                            double val = parseJsonSpriteObj(parser, newSprite, lastEndX, lastEndX);
+
+                            lastEndX = val;
+                            newSprite.setWithinImageWidth(val - newSprite.getWithinImageX());
+
+                            //Utils.log("endx: " + lastEndX);
+                        }
+                        else if (parser.getString().equals("endy")) {
+                            double val = parseJsonSpriteObj(parser, newSprite, lastEndY, lastEndY);
+
+                            lastEndY = val;
+                            
+                            newSprite.setWithinImageHeight(val - newSprite.getWithinImageY());
+                            //Utils.log("endy: " + lastEndY);
+                        }
+                    }
+                    // Zoids.              
+ 	                break;
+                case VALUE_STRING:
+                case VALUE_NUMBER:
+                    break;
+            }
+        }
+
+	    return nLoaded;
+    }
+
+    // Split a sprite into sub-sprites of specified cols and rows
+    // This only works if the sub-sprites are evently spaced
+    // This could be useful for a large sheet of multiple art "concepts" but they'd all have to be
+    // spaced exactly the same way throughout.  Then we could skip providing the json file and just
+    // use this function to automate it.
+    private static void splitSpriteIntoSubsprites(ArrayList<CharSprite> fixedSprites, CharSprite sprite, int cols, int rows) {
+        // All we need to do is split it up into X parts then subdivide each
+        int spriteWidth = (int)sprite.getImage().getWidth() / cols;
+        int spriteHeight = (int)sprite.getImage().getHeight() / rows;
+
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                CharSprite newSprite = new CharSprite(sprite);
+
+                // This is creating 3 by 4 sprites, as in a character or monster sprite, we might not always
+                // want to do it this way for other types of sprites.
+                newSprite.createFrames(3, 4, col * spriteWidth, row * spriteHeight, spriteWidth, spriteHeight);
+                fixedSprites.add(newSprite);
+
+                // Clip these
+                newSprite.clip(2);
+            }
+        }
+    }
+
     // Load all images from folder filePath, and put them into imageList
-    // Assumes all files in folder ARE loadable images
     public static void loadAllImagesFromFolder(String filePath, ArrayList<Image> imageList) {
         String fileNameAndPath;
         Image image;
@@ -74,14 +246,18 @@ public final class GraphicsLoader {
             fileNameAndPath = filePath + contents[i];
             sprite = loadOneCharSprite(fileNameAndPath);
             if (sprite != null) {
-                spriteList.add(sprite);
+                loadJsonSpriteData(sprite, spriteList);
+                //spriteList.add(sprite);
             }
         }
 
-        Utils.log("Loaded " + i + " char sprites from " + directoryPath.getAbsolutePath());
+        Utils.log("Loaded " + spriteList.size() + " char sprites from " + directoryPath.getAbsolutePath());
     }
 
     public static Image loadOneImage(String fileNameAndPath) {
+        if (fileIsValidImage(fileNameAndPath) == false) {
+            return null;
+        }
         try {
             InputStream stream = new FileInputStream(fileNameAndPath);
             Image image = new Image(stream);
@@ -94,10 +270,13 @@ public final class GraphicsLoader {
     }
 
     public static GameSprite loadOneSprite(String fileNameAndPath) {
+        if (fileIsValidImage(fileNameAndPath) == false) {
+            return null;
+        }
         try {
             InputStream stream = new FileInputStream(fileNameAndPath);
-            GameSprite sprite = new GameSprite(stream);
-            Data.sprites.add(sprite); // Automatically add ref to master list
+            GameSprite sprite = new GameSprite(stream, fileNameAndPath);
+            //Data.sprites.add(sprite); // Automatically add ref to master list
             return sprite;
         }
         catch (FileNotFoundException e) {
@@ -107,10 +286,13 @@ public final class GraphicsLoader {
     }
 
     public static CharSprite loadOneCharSprite(String fileNameAndPath) {
+        if (fileIsValidImage(fileNameAndPath) == false) {
+            return null;
+        }
         try {
             InputStream stream = new FileInputStream(fileNameAndPath);
-            CharSprite sprite = new CharSprite(stream);
-            Data.sprites.add(sprite); // Automatically add ref to master list
+            CharSprite sprite = new CharSprite(stream, fileNameAndPath);
+            //Data.sprites.add(sprite); // Automatically add ref to master list
             return sprite;
         }
         catch (FileNotFoundException e) {
@@ -148,6 +330,7 @@ public final class GraphicsLoader {
         // The . means use the working directory
         loadAllCharSpritesFromFolder("." + Constants.FEMALE_CHARSPRITE_PATH, Data.femaleSprites);
         loadAllCharSpritesFromFolder("." + Constants.MALE_CHARSPRITE_PATH, Data.maleSprites);
+        //loadAllCharSpritesFromFolder("." + Constants.MONSTER_CHARSPRITE_PATH, Data.monsterSprites);
 
         // Make the frames...
         for (CharSprite spr : Data.femaleSprites) {
@@ -156,9 +339,16 @@ public final class GraphicsLoader {
         for (CharSprite spr : Data.maleSprites) {
             spr.createStandardFrames();
         }
+        /*for (CharSprite spr : Data.monsterSprites) {
+            spr.createStandardFrames();
+        }*/
+
+        // Load whichever set we want to use
+        if (Constants.USING_TIMEFANTASY == true) {
+            loadTimeFantasyMonsters();
+        }
     }
     
-
     public static void loadGifs() {
         loadAllImagesFromFolder("." + Constants.GIF_PATH, Data.gifs);
     }
@@ -175,6 +365,13 @@ public final class GraphicsLoader {
                 spr.hasDuplicateKeys();
             }
         }
+    }
+
+    public static void loadTimeFantasyMonsters() {
+        loadAllCharSpritesFromFolder("." + Constants.TIMEFANTASY_PATH_MONSTER, Data.monsterSprites);
+
+        // Now call the sprite handler to set up these sprites
+        SpriteHandler_TimeFantasy.setupMonsterSprites();
     }
 
     public static void loadPipoyaImages() {

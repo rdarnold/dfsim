@@ -31,8 +31,66 @@ import dfsim.*;
 import dfsim.gui.*;
 
 // Generic sprite processing that covers all areas
-// A GameSprite is a sprite sheet which we subdivide into smaller areas
-public class GameSprite extends Image {
+
+// A GameSprite is one art "concept" in the game.  So it is an entire
+// set of images for one character sprite, or a single image for a town on the overland map, 
+// or a set of images for a building, or a door (that might have multiple states).
+// There is not a 1 to 1 ratio between Images and GameSprites.  Multiple GameSprites can
+// point into different parts of a single image.
+// A GameSprite is a sprite sheet which we subdivide into frames
+// It can also be pointing to just a part of a larger image, and that part itself is
+// subdivided into frames.  
+public class GameSprite {
+
+    // We want the image as a variable on the sprite, that way we can use the same image
+    // for multiple different sprites if we want
+    protected Image m_Image;
+    public Image getImage() { return m_Image; }
+    public void setImage(Image img) { 
+        m_Image = img;
+        if (img == null) {
+            m_WithinImageX = 0;
+            m_WithinImageY = 0;
+            m_WithinImageWidth = 0;
+            m_WithinImageHeight = 0;
+            return;
+        }
+        m_WithinImageWidth = img.getWidth();
+        m_WithinImageHeight = img.getHeight();
+    }
+
+    // The dimensions of this sprite within the Image.  Some are the entire image,
+    // others are sprite sheets within a larger sprite sheets like some sprite sheets
+    // have multiple "concepts" on them including monsters, etc.  This tells us where,
+    // within m_Image, the border of the images we are using for this sprite, are.
+    // These are used to create the frames of the sprite, as an "internal bounding box"
+    // Assume 0, 0, image width/height unless we are told otherwise
+    protected double m_WithinImageX = 0;
+    protected double m_WithinImageY = 0;
+    protected double m_WithinImageWidth = 0;
+    protected double m_WithinImageHeight = 0;
+    public double getWithinImageX() { return m_WithinImageX; }  // Remember, the X coordinate WITHIN the image, NOT the game
+    public double getWithinImageY() { return m_WithinImageY; }
+    public double getWithinImageWidth() { return m_WithinImageWidth; }
+    public double getWithinImageHeight() { return m_WithinImageHeight; }
+    public void setWithinImageX(double num) { m_WithinImageX = num; }  
+    public void setWithinImageY(double num) { m_WithinImageY = num; }
+    public void setWithinImageWidth(double num) { m_WithinImageWidth = num; }
+    public void setWithinImageHeight(double num) { m_WithinImageHeight = num; }
+    
+    // Within the bounds above, where does the first frame start?  We can then use
+    // that to craft all the other frames.
+    // Guess these could be rects too or Rectangles.
+    // This is for further defining how the frames should be cut out of the image
+    public Rectangle frameBounds = null;
+
+    private String m_strFileName;
+    public String getFileName() { return m_strFileName; }
+
+    // Like frames, sprites also can be accessed through key strings
+    private String m_strKey = "";
+    public String getSpriteKey() { return m_strKey; }
+    public void setSpriteKey(String key) { m_strKey = key; }
 
     class Frame extends Rectangle {
         // Key allows us to search by a string so we can swap out sprite sheets
@@ -53,8 +111,19 @@ public class GameSprite extends Image {
     public int getNumFrames() { return frames.size(); }
 
     // Add more as needed
-    public GameSprite(InputStream stream) {
-        super(stream);
+    public GameSprite(InputStream stream, String fileName) {
+        setImage(new Image(stream));
+        m_strFileName = fileName;
+    }
+
+    public GameSprite(Image img, String fileName) {
+        setImage(img);
+        m_strFileName = fileName;
+    }
+
+    public GameSprite(GameSprite sprite) {
+        setImage(sprite.getImage());
+        m_strFileName = sprite.getFileName();
     }
 
     public void setFrameKey(int index, String strKey) {
@@ -124,6 +193,43 @@ public class GameSprite extends Image {
         return -1;
     }
 
+    // Clip the "edges" of every frame to make the sprite tighter,
+    // like if it has a lot of whitespace we don't want for example.
+    public void clip(int pixels) {
+        for (Frame frame : frames) {
+            frame.setY(frame.getY() - pixels);
+            frame.setX(frame.getX() - pixels);
+            frame.setWidth(frame.getWidth() - pixels);
+            frame.setHeight(frame.getHeight() - pixels);
+        }
+    }
+
+    // Shift all the frames if the sprites, for example, are not centered
+    // in the actual image.
+    public void shiftUp(int pixels) {
+        for (Frame frame : frames) {
+            frame.setY(frame.getY() - pixels);
+        }
+    }
+
+    public void shiftDown(int pixels) {
+        for (Frame frame : frames) {
+            frame.setY(frame.getY() + pixels);
+        }
+    }
+
+    public void shiftRight(int pixels) {
+        for (Frame frame : frames) {
+            frame.setX(frame.getX() + pixels);
+        }
+    }
+
+    public void shiftLeft(int pixels) {
+        for (Frame frame : frames) {
+            frame.setX(frame.getX() - pixels);
+        }
+    }
+
     public void drawFrameByIndex(GraphicsContext gc, int index, double x, double y, double wid, double hgt) {
         if (frames == null) {
             return;
@@ -132,13 +238,38 @@ public class GameSprite extends Image {
         if (frame == null) {
             return;
         }
-        gc.drawImage(this, frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight(), x, y, wid, hgt);
+        gc.drawImage(m_Image, frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight(), x, y, wid, hgt);
     }
 
     public void drawFrameByKey(GraphicsContext gc, String key, double x, double y, double wid, double hgt) {
         int index = getIndexForKey(key);
         if (index >= 0) {
             drawFrameByIndex(gc, index, x, y, wid, hgt);
+        }
+    }
+
+    // Used for a sprite sheet of a single "concept" that needs to be divided into
+    // frames of the same size.
+    // Create frames of same size automatically based on the number of frames,
+    // framesWide is how many frames across, framesLong is how many frames
+    // down, so that we can automatically load the right number based on size.
+    public void createFrames(int framesWide, int framesLong) {
+        //createFrames(framesWide, framesLong, 0, 0, (int)getImage().getWidth(), (int)getImage().getHeight());
+        createFrames(framesWide, framesLong, 
+                    (int)m_WithinImageX, (int)m_WithinImageY, 
+                    (int)m_WithinImageWidth, (int)m_WithinImageHeight);
+    }
+
+    // We can also create frames at a different "location" in the sheet, not just starting at the top left.  In case
+    // we are using one sheet for multiple different sprites.
+    public void createFrames(int framesWide, int framesLong, int startX, int startY, int spriteWidth, int spriteHeight) {
+        int sizeWid = spriteWidth / framesWide;
+        int sizeHgt = spriteHeight / framesLong;
+
+        for (int row = 0; row < framesLong; row++) {
+            for (int col = 0; col < framesWide; col++) {
+                addFrame("", startX + (col * sizeWid), startY + (row * sizeHgt), sizeWid, sizeHgt);
+            }
         }
     }
 }

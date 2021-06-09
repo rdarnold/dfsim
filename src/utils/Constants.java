@@ -26,6 +26,11 @@ public final class Constants {
     // Char sprites
     public static final String FEMALE_CHARSPRITE_PATH = CHAR_SPRITES_PATH + "female/";
     public static final String MALE_CHARSPRITE_PATH = CHAR_SPRITES_PATH + "male/";
+    public static final String MONSTER_CHARSPRITE_PATH = CHAR_SPRITES_PATH + "monster/";
+    
+    // The time fantasy defines
+    public static final boolean USING_TIMEFANTASY = true;
+    public static final String TIMEFANTASY_PATH_MONSTER = MONSTER_CHARSPRITE_PATH + "TimeFantasy/";
 
     // The pipoya defines
     public static final boolean USING_PIPOYA = true;

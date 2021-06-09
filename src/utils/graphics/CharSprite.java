@@ -36,8 +36,16 @@ public class CharSprite extends GameSprite {
     private int numMoveStates = 3;
     public int getNumMoveStates() { return numMoveStates; }
 
-    public CharSprite(InputStream stream) {
-        super(stream);
+    public CharSprite(InputStream stream, String fileName) {
+        super(stream, fileName);
+    }
+
+    public CharSprite(Image img, String fileName) {
+        super(img, fileName);
+    }
+
+    public CharSprite(CharSprite sprite) {
+        super(sprite);
     }
 
     // Based on the standard 12-frame
@@ -74,21 +82,5 @@ public class CharSprite extends GameSprite {
         setFrameKey(9, "u1");
         setFrameKey(10, "u2");
         setFrameKey(11, "u3");
-    }
-
-    // Create the sprite automatically based on the number of frames,
-    // standard is 12 for a basic sprite and they're typically oriented
-    // the same way.  For more complex RPGs with multiple extra states 
-    // I should implement a custom handler
-    // framesWide is how many frames across, framesLong is how many frames
-    // down, so that we can automatically load the right number based on size.
-    public void createFrames(int framesWide, int framesLong) {
-        int size = (int)getWidth() / framesWide;
-
-        for (int row = 0; row < framesLong; row++) {
-            for (int col = 0; col < framesWide; col++) {
-                addFrame("", col * size, row * size, size, size);
-            }
-        }
     }
 }

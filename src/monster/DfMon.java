@@ -17,6 +17,8 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 
+import dfsim.gui.*;
+
 public class DfMon  {
 
     public static final MonVal[] vals = MonVal.values();
@@ -62,6 +64,10 @@ public class DfMon  {
     }
 
     public DfMon() { }
+    
+    private CharSprite sprite = null;
+    public CharSprite getSprite() { return sprite; }
+    public void setSprite(CharSprite s) { sprite = s; }
 
     public String name;
     public int series;
@@ -227,6 +233,7 @@ public class DfMon  {
             if (mon.getLevel() == 0) {
                 // Give it a random level and stats.
             }
+            mon.setRandomMonsterSprite();
         }
 
         // Now, do some kind of auto-balancing creation for all of our mons for
@@ -404,5 +411,16 @@ public class DfMon  {
         }
 
         postProcessMons();
+    }
+    
+    // For now we allow reuse of sprites but it probably isn't necessary
+    // since there is so much customization available.
+    // These sprites should in the future be assigned more like by class,
+    // looks, etc.; I need to categorize them better.
+    public void setRandomMonsterSprite() {
+        while (sprite == null) {
+            int n = Utils.number(0, Data.monsterSprites.size()-1);
+            setSprite(Data.monsterSprites.get(n));
+        }
     }
 }

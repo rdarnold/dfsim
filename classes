@@ -63,6 +63,7 @@ src/utils/graphics/GraphicsUtils.java
 src/utils/graphics/GameSprite.java
 src/utils/graphics/CharSprite.java
 src/utils/graphics/handlers/SpriteHandler_Pipoya.java
+src/utils/graphics/handlers/SpriteHandler_TimeFantasy.java
 src/utils/xml/PersonListWrapper.java
 src/utils/xml/XmlDataItem.java
 src/utils/xml/XmlProcessor.java

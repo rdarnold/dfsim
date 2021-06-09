@@ -385,6 +385,12 @@ public class LandMapTile extends DfSquareTile {
         return keyStr;
     }
 
+    // This paradigm needs to be updated to match what I'm doing with character sprites:
+    // Every separate "concept" should be a separate sprite object, rather than just indexing
+    // frames into the overlandmap "sprite."  there should be a list of overland map sprites,
+    // and these frames should all be separate sprites in that list.  That way if I add extra
+    // graphics like moving grass, water, etc., it'll be much easier to handle.
+    // Terrain sprites are fine because they are already independent, separate "concepts."
     public void updateImage() {
         switch (type) {
             case Blank:     gs = null; break;

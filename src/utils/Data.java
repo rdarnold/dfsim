@@ -58,6 +58,8 @@ public final class Data {
     public static ArrayList<CharSprite> maleSprites = new ArrayList<CharSprite>();
     public static ArrayList<CharSprite> femaleSprites = new ArrayList<CharSprite>();
 
+    public static ArrayList<CharSprite> monsterSprites = new ArrayList<CharSprite>();
+
     private static XmlProcessor xmlProcessor = new XmlProcessor();
 
     public static void load() {

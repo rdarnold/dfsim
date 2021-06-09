@@ -418,7 +418,7 @@ public class HexMapEntity extends MovablePolygon {
         timeline.getKeyFrames().clear();
 
         // Add frames based on steps of the move.
-        int timeIntervalMS = 100;
+        int timeIntervalMS = 150;
         int timePointMS = timeIntervalMS;
 
         movePath.clear();
@@ -496,13 +496,24 @@ public class HexMapEntity extends MovablePolygon {
             drawSelected(gc);
         }
 
-        // Draw the portrait
+        // Draw the sprite
         if (partyMember != null) {
             double x = getCenterX() - getSize()/2;
             double y = getCenterY() - getSize()/2;
             //gc.drawImage(partyMember.getPortraitImage(), x, y, getSize(), getSize());
             
             CharSprite sprite = partyMember.getSprite();
+            int index = sprite.getFrameIndexForMovementState(getMoveState(), getFacing());
+        
+            //gc.drawImage(img, 10, 10, 50, 50, getX(), getX(), getWidth(), getHeight());
+            sprite.drawFrameByIndex(gc, index, x, y, getSize(), getSize());
+        }
+        else if (mon != null) {
+            double x = getCenterX() - getSize()/2;
+            double y = getCenterY() - getSize()/2;
+            //gc.drawImage(partyMember.getPortraitImage(), x, y, getSize(), getSize());
+            
+            CharSprite sprite = mon.getSprite();
             int index = sprite.getFrameIndexForMovementState(getMoveState(), getFacing());
         
             //gc.drawImage(img, 10, 10, 50, 50, getX(), getX(), getWidth(), getHeight());
