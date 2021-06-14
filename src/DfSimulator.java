@@ -130,6 +130,10 @@ public class DfSimulator {
         // And add some random monsters.
     }
 
+    public boolean isShowingDialogue() {
+        return (dialogueWindow.isVisible() == true);
+    }
+
     public void showDialogue(Person p, String text) {
         dialogueWindow.displayDialogue(p, text);
     }
@@ -144,5 +148,14 @@ public class DfSimulator {
             // want to trigger an additional dialogue.  Or, we might want to
             // create a dialogue by chaining a shitload of them together.
         }
+    }
+    
+    // Block clicks if we have dialogue up.
+    public boolean checkAndAdvanceDialogue() {
+        if (isShowingDialogue() == false) {
+            return false;
+        }
+        nextDialogue(); 
+        return true;
     }
 }

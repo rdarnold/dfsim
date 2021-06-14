@@ -137,7 +137,7 @@ public final class GraphicsLoader {
                             newSprite.setWithinImageY(parseJsonSpriteObj(parser, newSprite, lastEndY, lastStartY));
                             //newSprite.setWithinImageY(Utils.getNextJsonValueAsInt(parser));
 
-                            lastStartX = newSprite.getWithinImageY();
+                            lastStartY = newSprite.getWithinImageY();
                             
                             // Automatically size to the edge of the image unless we are told otherwise with endy later
                             newSprite.setWithinImageHeight(newSprite.getWithinImageHeight() - newSprite.getWithinImageY());
@@ -225,6 +225,32 @@ public final class GraphicsLoader {
         Utils.log("Loaded " + i + " images from " + directoryPath.getAbsolutePath());
     }
 
+    public static void loadAllGameSpritesFromFolder(String filePath, ArrayList<GameSprite> spriteList) {
+        String fileNameAndPath;
+        GameSprite sprite;
+        File directoryPath;
+        String contents[];
+        int i = 0;
+
+        directoryPath = new File(filePath);
+        //List of all files and directories
+        contents = directoryPath.list();
+        if (contents == null) {
+            Utils.log("GameSprite folder " + directoryPath.getAbsolutePath() + " not found.");
+            return;
+        }
+        //Utils.log("List of files and directories in " + directoryPath.getAbsolutePath() + ":");
+        for (i = 0; i < contents.length; i++) {
+            fileNameAndPath = filePath + contents[i];
+            sprite = loadOneSprite(fileNameAndPath);
+            if (sprite != null) {
+                spriteList.add(sprite);
+            }
+        }
+
+        Utils.log("Loaded " + spriteList.size() + " game sprites from " + directoryPath.getAbsolutePath());
+    }
+
     // Kind of wish I could just use the function above and then "upgrade" the objects
     public static void loadAllCharSpritesFromFolder(String filePath, ArrayList<CharSprite> spriteList) {
         String fileNameAndPath;
@@ -252,6 +278,32 @@ public final class GraphicsLoader {
         }
 
         Utils.log("Loaded " + spriteList.size() + " char sprites from " + directoryPath.getAbsolutePath());
+    }
+    
+    // Kind of wish I could just use the function above and then "upgrade" the objects
+    public static void loadAllSpriteAnimationsFromFolder(String filePath, ArrayList<SpriteAnimation> spriteList, int scalePercent) {
+        String fileNameAndPath;
+        SpriteAnimation sprite;
+        File directoryPath;
+        String contents[];
+        int i = 0;
+
+        directoryPath = new File(filePath);
+        //List of all files and directories
+        contents = directoryPath.list();
+        if (contents == null) {
+            Utils.log("SpriteAnimation folder " + directoryPath.getAbsolutePath() + " not found.");
+            return;
+        }
+        //Utils.log("List of files and directories in " + directoryPath.getAbsolutePath() + ":");
+        for (i = 0; i < contents.length; i++) {
+            //Utils.log(contents[i]);
+            fileNameAndPath = filePath + contents[i];
+            sprite = loadOneSpriteAnimation(fileNameAndPath, scalePercent);
+            spriteList.add(sprite);
+        }
+
+        Utils.log("Loaded " + spriteList.size() + " animation sprites from " + directoryPath.getAbsolutePath());
     }
 
     public static Image loadOneImage(String fileNameAndPath) {
@@ -301,12 +353,43 @@ public final class GraphicsLoader {
         return null;
     }
 
+    
+    public static SpriteAnimation loadOneSpriteAnimation(String fileNameAndPath) {
+        return loadOneSpriteAnimation(fileNameAndPath, 0);
+    }
+
+    public static SpriteAnimation loadOneSpriteAnimation(String fileNameAndPath, int sizePixels) {
+        if (fileIsValidImage(fileNameAndPath) == false) {
+            return null;
+        }
+        try {
+            InputStream stream = new FileInputStream(fileNameAndPath);
+            SpriteAnimation sprite = null;
+            if (sizePixels > 0) {
+                // We can load with a requested "scaling size" in sizePixels for sprite images that are too
+                // large, like Hit2.
+                sprite = new SpriteAnimation(stream, fileNameAndPath, sizePixels);
+            }
+            else {
+                // Or just load it at its native size if the size is fine.
+                sprite = new SpriteAnimation(stream, fileNameAndPath);
+            }
+            //Data.sprites.add(sprite); // Automatically add ref to master list
+            return sprite;
+        }
+        catch (FileNotFoundException e) {
+           Utils.log("SpriteAnimation file " + fileNameAndPath + " not found.");
+        }
+        return null;
+    }
+
 
     public static void loadImages() {
         loadPortraits();
         loadGifs(); // Disabled for now just to save time
         loadCharSprites();
         loadTiles();
+        loadSpriteAnimations();
     }
 
     // Load up all the character portraits
@@ -356,7 +439,7 @@ public final class GraphicsLoader {
     public static void loadTiles() {
         // Load whichever tileset we want to use
         if (Constants.USING_PIPOYA == true) {
-            loadPipoyaImages();
+            loadPipoyaSprites();
         }
 
         // Now check all of them for dupes
@@ -365,6 +448,25 @@ public final class GraphicsLoader {
                 spr.hasDuplicateKeys();
             }
         }
+
+        // Load hex tiles if we're using
+        if (Constants.USING_VNHEX == true) {
+            loadVNHexImages();
+        }
+    }
+
+    public static void loadSpriteAnimations() {
+        if (Constants.USING_HITS2 == true) {
+            loadHits2Images();
+        }
+    }
+
+    public static void loadHits2Images() {
+        // Scale the large image on load
+        loadAllSpriteAnimationsFromFolder("." + Constants.HITS2_PATH, Data.atkAnimSprites, 1024);
+
+        // Now call the sprite handler to set up these sprites
+        SpriteHandler_Hits2.setupAttackSprites();
     }
 
     public static void loadTimeFantasyMonsters() {
@@ -374,7 +476,14 @@ public final class GraphicsLoader {
         SpriteHandler_TimeFantasy.setupMonsterSprites();
     }
 
-    public static void loadPipoyaImages() {
+    public static void loadVNHexImages() {
+        loadAllGameSpritesFromFolder("." + Constants.VNHEX_PATH, Data.hexTileSprites);
+
+        // Now call the sprite handler to set up these sprites
+        SpriteHandler_VNHex.setupHexTileSprites();
+    }
+
+    public static void loadPipoyaSprites() {
         // Load up the map image
         Data.spriteOverlandMap = loadOneSprite("." + Constants.PIPOYA_FILENAME_MAP);
         

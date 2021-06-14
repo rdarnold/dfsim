@@ -193,13 +193,22 @@ public class PartyScreen extends DfScreen {
 
         gifTest.setVisible(true);
 
-        DfSim.sim.showDialogue(mate, /*"You want to have sex?  Oh, ugh... Fine, if you insist... " +
+        DfSim.sim.showDialogue(mate,  
+        /*"We just had sex.. you really are the king, right?  You grunt like a common thug... " +
+        "Not that I've had sex with a common thug.  Actually you are the first person I've had " +
+        "sex with.  I thought it would be good to give myself to the king, but now... you aren't " +
+        "really the king, are you.  I can see by your smirk... So I really did just have sex with " +
+        "a dirty mercenary..."); */
+        "Are you truly the king?  You do not look the part... more like a mercenary.");
+        /*"What!?  I only had sex with you because you said you were the king!  That was a lie!?  Ugh, how filthy... "+
+        "Now I just have the load of some... stranger... in my belly.  Gross.");*/
+        /*"You want to have sex?  Oh, ugh... Fine, if you insist... " +
         "(" + mate.getName() + " removes " + mate.getArmor() + ".  " +
         "You have sex with " + mate.getName() + ".  " + mate.getName() + " wears " + mate.getArmor() + ").  " +
         "Did you have to dump your load in me? (" + mate.getName() + " rolls her eyes).  In Castle Starlock, we don't " +
         "do things this way."
         ); */
-        "CANDOUR compels me, BECHER! to commend " +
+        /*"CANDOUR compels me, BECHER! to commend " +
         "the verse which blends the censor with the friend. " +
         "Your strong yet just reproof extorts applause " +
         "from me, the heedless and imprudent cause. " +
@@ -214,7 +223,7 @@ public class PartyScreen extends DfScreen {
         "Vainly the dotard mends her prudish pace, " +
         "outstript and vanquish'd in the mental chase. " +
         "The young, the old, have worn the chains of love; " +
-        "Let those they ne'er confined my lay reprove.");
+        "Let those they ne'er confined my lay reprove.");*/
          
         Utils.log("You mate with " + mate.getName() + ".");
         mate.mated++;

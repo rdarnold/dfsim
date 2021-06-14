@@ -54,10 +54,15 @@ public final class Data {
     public static GameSprite spriteMtn2 = null;
     public static GameSprite spriteMtn3 = null;
 
+    // Attack animation sprites
+    public static ArrayList<SpriteAnimation> atkAnimSprites = new ArrayList<SpriteAnimation>();
+
+    // Hex tile sprites
+    public static ArrayList<GameSprite> hexTileSprites = new ArrayList<GameSprite>();
+
     // Character sprites
     public static ArrayList<CharSprite> maleSprites = new ArrayList<CharSprite>();
     public static ArrayList<CharSprite> femaleSprites = new ArrayList<CharSprite>();
-
     public static ArrayList<CharSprite> monsterSprites = new ArrayList<CharSprite>();
 
     private static XmlProcessor xmlProcessor = new XmlProcessor();

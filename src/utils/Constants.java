@@ -19,6 +19,7 @@ public final class Constants {
     public static final String MALE_PORTRAIT_PATH = RES_LOAD_PATH + "portraits/male/";
     public static final String GIF_PATH = RES_LOAD_PATH + "gifs/";
     public static final String TILES_PATH = RES_LOAD_PATH + "tiles/";
+    public static final String ANIMATIONS_PATH = RES_LOAD_PATH + "animations/";
     public static final String CHAR_SPRITES_PATH = RES_LOAD_PATH + "char_sprites/";
 
     public static final String FILENAME_CHAR_SPRITE_HERO1 = CHAR_SPRITES_PATH + "hero1.png";
@@ -27,6 +28,9 @@ public final class Constants {
     public static final String FEMALE_CHARSPRITE_PATH = CHAR_SPRITES_PATH + "female/";
     public static final String MALE_CHARSPRITE_PATH = CHAR_SPRITES_PATH + "male/";
     public static final String MONSTER_CHARSPRITE_PATH = CHAR_SPRITES_PATH + "monster/";
+    
+    // Animations
+    public static final String ATTACK_ANIMATIONS_PATH = ANIMATIONS_PATH + "attack/";
     
     // The time fantasy defines
     public static final boolean USING_TIMEFANTASY = true;
@@ -49,6 +53,17 @@ public final class Constants {
     public static final String PIPOYA_FILENAME_MTN2 = PIPOYA_PATH_TILES + "pipo-map001_at-yama2.png";
     public static final String PIPOYA_FILENAME_MTN3 = PIPOYA_PATH_TILES + "pipo-map001_at-yama3.png";
     // End pipoya defines
+    
+    // The HITS2 defines
+    public static final boolean USING_HITS2 = true;
+    public static final String HITS2_PATH = ATTACK_ANIMATIONS_PATH + "Hits2 Animations/";
+    // end HITS2 defines
+
+    // The VNHex defines
+    public static final boolean USING_VNHEX = true;
+
+    public static final String VNHEX_PATH = TILES_PATH + "hex/outline + bevel/";
+    // end VNHex defines
 
     public static final int BUTTON_WIDTH = 120;
     public static final int NODE_SIZE = 125;
@@ -63,6 +78,8 @@ public final class Constants {
     // Number of pixels per tile.  The engine will automatically scale tile images
     // to this size regardless of what their resolutions are.
     public static final int BASE_TILE_SIZE = 30;
+
+    public static final int BASE_HEX_TILE_SIZE = 40;
 
     // How many ms for screen fades?
     public static final int FADE_MS = 500;
@@ -110,8 +127,8 @@ public final class Constants {
         SOUTHEAST(3), 
         SOUTH(4), 
         SOUTHWEST(5), 
-        EAST(6), 
-        WEST(7), 
+        EAST(6), // Not used
+        WEST(7), // Not used
         NUMDIRS(8), 
         NONE(9);
 
@@ -131,6 +148,15 @@ public final class Constants {
                 Ordinal.cachedValues = Ordinal.values();
             }
             return Ordinal.cachedValues[i];
+        }
+
+        // Rotates through the 6 we use
+        public static Ordinal next(Constants.Ordinal dir) {
+            int i = dir.val() + 1;
+            if (i >= EAST.val()) {
+                i = 0;
+            }
+            return fromInt(i);
         }
 
         public static Ordinal revOrdinal(Constants.Ordinal dir) {

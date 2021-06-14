@@ -59,6 +59,10 @@ public class GameSprite {
         m_WithinImageHeight = img.getHeight();
     }
 
+    // We can specify an image to draw natively without scaling or stretching
+    protected boolean m_bDoNotScaleOrStretch = false;
+    public boolean doNotScaleOrStretch() { return m_bDoNotScaleOrStretch; }
+
     // The dimensions of this sprite within the Image.  Some are the entire image,
     // others are sprite sheets within a larger sprite sheets like some sprite sheets
     // have multiple "concepts" on them including monsters, etc.  This tells us where,
@@ -77,12 +81,11 @@ public class GameSprite {
     public void setWithinImageY(double num) { m_WithinImageY = num; }
     public void setWithinImageWidth(double num) { m_WithinImageWidth = num; }
     public void setWithinImageHeight(double num) { m_WithinImageHeight = num; }
-    
-    // Within the bounds above, where does the first frame start?  We can then use
-    // that to craft all the other frames.
-    // Guess these could be rects too or Rectangles.
-    // This is for further defining how the frames should be cut out of the image
-    public Rectangle frameBounds = null;
+
+    // This is just SUPER SUPER weird so I'm leaving this line in here for future posterity-
+    // if I change this next line to "public Rectangle frameBounds;" the game crashes on startup
+    // with an assertion error! But if I leave it as private it runs just fine! WTFFFF!
+    //Rectangle frameBounds;
 
     private String m_strFileName;
     public String getFileName() { return m_strFileName; }
@@ -110,9 +113,26 @@ public class GameSprite {
     ArrayList<Frame> frames = new ArrayList<Frame>();
     public int getNumFrames() { return frames.size(); }
 
+    public double getFrameWidth(int index) {
+        if (frames == null) { return 0; }
+        if (index >= frames.size()) { return 0; }
+        return frames.get(index).getWidth();
+    }
+    public double getFrameHeight(int index) {
+        if (frames == null) { return 0; }
+        if (index >= frames.size()) { return 0; }
+        return frames.get(index).getHeight();
+    }
+
     // Add more as needed
     public GameSprite(InputStream stream, String fileName) {
         setImage(new Image(stream));
+        m_strFileName = fileName;
+    }
+
+    public GameSprite(InputStream stream, String fileName, int sizePixels) {
+        // Image(InputStream is, double requestedWidth, double requestedHeight, boolean preserveRatio, boolean smooth)
+        setImage(new Image(stream, sizePixels, sizePixels, true, false));
         m_strFileName = fileName;
     }
 
@@ -197,12 +217,103 @@ public class GameSprite {
     // like if it has a lot of whitespace we don't want for example.
     public void clip(int pixels) {
         for (Frame frame : frames) {
-            frame.setY(frame.getY() - pixels);
-            frame.setX(frame.getX() - pixels);
-            frame.setWidth(frame.getWidth() - pixels);
+            frame.setX(frame.getX() + pixels);
+            frame.setY(frame.getY() + pixels);
+            frame.setWidth(frame.getWidth() - (pixels*2));
+            frame.setHeight(frame.getHeight() - (pixels*2));
+        }
+    }
+    
+    // Clip just the top part of the frame
+    public void clipTop(int pixels) {
+        for (Frame frame : frames) {
+            frame.setY(frame.getY() + pixels);
             frame.setHeight(frame.getHeight() - pixels);
         }
     }
+    
+    // Find the transparency rect that bounds the non-transparent part of this
+    // particular frame
+    public Rectangle getTransparentBoundsForFrame(Frame frame) {
+        return GraphicsUtils.getTransparentBounds(getImage(), frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight());
+    }
+
+    public void clipTransparent() {
+        clipTransparent(0);
+    }
+
+    // Clip any 'blank' transparent space based on the smallest possible
+    // rect within each frame that will encompass all pixels of all frames
+    // the 'padding' parameter determines how many extra pixels are NOT clipped
+    //   I could add a facility to increase the size of the image
+    // by adding extra transparent pixels on right and bottom side as necessary.
+    // if padding goes over; right now I just stop it there.
+    public void clipTransparent(int padding) {
+        for (Frame frame : frames) {
+            Rectangle bounds = getTransparentBoundsForFrame(frame);
+            frame.setX(bounds.getX() - padding);
+            frame.setY(bounds.getY() - padding);
+            frame.setWidth(bounds.getWidth() + (padding*2));
+            frame.setHeight(bounds.getHeight() + (padding*2));
+
+            // Just don't let the frame go past on right or bottom of the image even with
+            // padding
+            if (frame.getX() + frame.getWidth() > getImage().getWidth()) {
+                frame.setWidth(getImage().getWidth() - frame.getX());
+            }
+            if (frame.getY() + frame.getHeight() >  getImage().getHeight()) {
+                frame.setHeight(getImage().getHeight() - frame.getY());
+            }
+        }
+    }
+
+    // We would love it if all images were fit within a 32x32 square or whatever standard.
+    // Unfortunately many are not.  However,
+    // they need to be square-shaped otherwise when they draw in square spaces,
+    // the system will auto-stretch/compress them to fit, which looks wonky.  So we need
+    // to make sure we have included enough whitespace in each frame that the
+    // frame is an exact square.
+    // "dir" is the dir to square "off of" - if Dir.None is passed, it'll square
+    // off of the center of the square.  Otherwise whatever dir is passed in
+    // is considered unchangeable; for ex., maybe the sprites are all at the bottom
+    // of their frames so we won't want to expand past that.
+    /*public void makeFramesSquare(Constants.Dir dir) {
+        for (Frame frame : frames) {
+            double x = frame.getX();
+            double y = frame.getY();
+            double width = frame.getWidth();
+            double height = frame.getHeight();
+
+            // Squared, already done.
+            if (width == height) {
+                continue;
+            }
+            if (width < height) {
+                // Increase width to match height
+                switch (dir) {
+                    case WEST:
+                        break;
+                    case EAST:
+                        break;
+                    default:
+                        break;
+
+                }
+            }
+            else {
+                // Increase height to match width
+                switch (dir) {
+                    case NORTH:
+                        break;
+                    case SOUTH:
+                        break;
+                    default:
+                        break;
+
+                }
+            }
+        }
+    }*/
 
     // Shift all the frames if the sprites, for example, are not centered
     // in the actual image.
@@ -230,15 +341,91 @@ public class GameSprite {
         }
     }
 
+    // Permanently rotate our image
+    public void rotateImage(int angleDegrees) {
+        setImage(GraphicsUtils.rotateImage(getImage(), angleDegrees));
+    }
+
+    // Draw the entire image, we don't have frames or don't want to draw them here
+    public void drawFullImage(GraphicsContext gc, double x, double y, double wid, double hgt) {
+        double drawX = x;
+        double drawY = y;
+        double drawWid = wid;
+        double drawHgt = hgt;
+
+        // Some images we don't compress or stretch, especially if the aspect ratio will be weird.
+        // This is true for many character sprites which may be rectangles, etc.
+        if (doNotScaleOrStretch() == true) {
+            drawWid = getImage().getWidth();
+            drawHgt = getImage().getHeight();
+
+            drawX += wid/2 - drawWid/2;
+            drawY += hgt/2 - drawHgt/2;
+            // Utils.log("wid: " + wid + ", hgt: " + hgt + "drawWid: " + drawWid + ", drawHgt: " + drawHgt);
+            // No matter what, we don't want to draw below the bottom because it's "sort of" perspective
+            // and we pad it with some pixels
+            if (drawY + drawHgt > y + hgt - 5) {
+                drawY = (y + hgt) - drawHgt - 5;
+            }
+        }
+            
+        // We cast to (int) because we don't want blurring to occur.
+        // Blurring will occur when a coordinate is not an int; like it's "0.5" or whatever and is not lined up exactly.
+        gc.drawImage(getImage(), 0, 0, (int)getImage().getWidth(), (int)getImage().getHeight(), (int)drawX, (int)drawY, (int)drawWid, (int)drawHgt);
+    }
+
+    // Draw based on frame width / height automatically
+    public void drawFrameByIndex(GraphicsContext gc, int index, double x, double y) {
+        drawFrameByIndex(gc, index, x, y, 0, 0, true);
+    }
+
+    // Draw based on specified wid and hgt
     public void drawFrameByIndex(GraphicsContext gc, int index, double x, double y, double wid, double hgt) {
-        if (frames == null) {
+        drawFrameByIndex(gc, index, x, y, wid, hgt, false);
+    }
+
+    // Not intended to be called externally, you call one of the above functions instead.
+    private void drawFrameByIndex(GraphicsContext gc, int index, double x, double y, double wid, double hgt, boolean useFrameDims) {
+        if (frames == null || index >= frames.size()) {
             return;
         }
         Frame frame = frames.get(index);
         if (frame == null) {
             return;
         }
-        gc.drawImage(m_Image, frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight(), x, y, wid, hgt);
+
+        double drawX = x;
+        double drawY = y;
+        double drawWid = wid;
+        double drawHgt = hgt;
+        
+        // Based the width and height off of just what the frame is, rather than anything external
+        if (useFrameDims == true) {
+            wid = frame.getWidth();
+            hgt = frame.getHeight();
+            drawWid = frame.getWidth();
+            drawHgt = frame.getHeight();
+        }
+
+        // Some images we don't compress or stretch, especially if the aspect ratio will be weird.
+        // This is true for many character sprites which may be rectangles, etc.
+        if (doNotScaleOrStretch() == true) {
+            drawWid = frame.getWidth();
+            drawHgt = frame.getHeight();
+
+            drawX += wid/2 - drawWid/2;
+            drawY += hgt/2 - drawHgt/2;
+            // Utils.log("wid: " + wid + ", hgt: " + hgt + "drawWid: " + drawWid + ", drawHgt: " + drawHgt);
+            // No matter what, we don't want to draw below the bottom because it's "sort of" perspective
+            // and we pad it with some pixels
+            if (drawY + drawHgt > y + hgt - 5) {
+                drawY = (y + hgt) - drawHgt - 5;
+            }
+        }
+            
+        // We cast to (int) because we don't want blurring to occur.
+        // Blurring will occur when a coordinate is not an int; like it's "0.5" or whatever and is not lined up exactly.
+        gc.drawImage(m_Image, (int)frame.getX(), (int)frame.getY(), (int)frame.getWidth(), (int)frame.getHeight(), (int)drawX, (int)drawY, (int)drawWid, (int)drawHgt);
     }
 
     public void drawFrameByKey(GraphicsContext gc, String key, double x, double y, double wid, double hgt) {

@@ -38,14 +38,19 @@ public class CharSprite extends GameSprite {
 
     public CharSprite(InputStream stream, String fileName) {
         super(stream, fileName);
+
+        // Let char sprites draw natively for now
+        m_bDoNotScaleOrStretch = true;
     }
 
     public CharSprite(Image img, String fileName) {
         super(img, fileName);
+        m_bDoNotScaleOrStretch = true;
     }
 
     public CharSprite(CharSprite sprite) {
         super(sprite);
+        m_bDoNotScaleOrStretch = true;
     }
 
     // Based on the standard 12-frame

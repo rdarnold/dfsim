@@ -69,6 +69,10 @@ public class DfCanvas extends Canvas {
     private HexMap hexMap = null;
     public void setHexMap(HexMap m) { hexMap = m; }
 
+    private ArrayList<SpriteAnimationInstance> animationList = new ArrayList<SpriteAnimationInstance>();
+    public void addAnimation(SpriteAnimationInstance anim) { animationList.add(anim); }
+    public void removeAnimation(SpriteAnimationInstance anim) { animationList.remove(anim); }
+
     public DfCanvas(double wid, double hgt) {
         super(wid, hgt);
         create();
@@ -201,6 +205,9 @@ public class DfCanvas extends Canvas {
 
     // Just forward it all up the chain
     private void onLeftClick(double x, double y) {
+        if (DfSim.sim.checkAndAdvanceDialogue() == true) {
+            return;
+        }
         if (squareMap != null) {
             squareMap.onLeftClick(x, y);
         }
@@ -210,6 +217,9 @@ public class DfCanvas extends Canvas {
     }
 
     private void onRightClick(double x, double y) {
+        if (DfSim.sim.checkAndAdvanceDialogue() == true) {
+            return;
+        }
         if (squareMap != null) {
             squareMap.onRightClick(x, y);
         }
@@ -219,6 +229,9 @@ public class DfCanvas extends Canvas {
     }
 
     private void onLeftPressed(double x, double y) {
+        if (DfSim.sim.isShowingDialogue() == true) {
+            return;
+        }
         if (squareMap != null) {
             squareMap.onLeftPressed(x, y);
         }
@@ -228,6 +241,9 @@ public class DfCanvas extends Canvas {
     }
     
     private void onRightPressed(double x, double y) {
+        if (DfSim.sim.isShowingDialogue() == true) {
+            return;
+        }
         if (squareMap != null) {
             squareMap.onRightPressed(x, y);
         }
@@ -237,6 +253,9 @@ public class DfCanvas extends Canvas {
     }
     
     private void onLeftDragged(double x, double y) {
+        if (DfSim.sim.isShowingDialogue() == true) {
+            return;
+        }
         if (squareMap != null) {
             squareMap.onLeftDragged(x, y);
         }
@@ -246,6 +265,9 @@ public class DfCanvas extends Canvas {
     }
 
     private void onRightDragged(double x, double y) {
+        if (DfSim.sim.isShowingDialogue() == true) {
+            return;
+        }
         if (squareMap != null) {
             squareMap.onRightDragged(x, y);
         }
@@ -255,6 +277,10 @@ public class DfCanvas extends Canvas {
     }
 
     private void onMouseMove(double x, double y) {
+        
+        if (DfSim.sim.isShowingDialogue() == true) {
+            return;
+        }
         if (squareMap != null) {
             squareMap.onMouseMove(x, y);
         }
@@ -262,8 +288,21 @@ public class DfCanvas extends Canvas {
             hexMap.onMouseMove(x, y);
         }
     }
+
+    public void updateAnimations() {
+        // Update animations, tick down from the top so we can
+        // remove them when they are done.
+        for (int i = animationList.size()-1; i >= 0; i--) {
+            SpriteAnimationInstance anim = animationList.get(i);
+            anim.update();
+            if (anim.isFinished()) {
+                animationList.remove(anim);
+            }
+        }
+    }
     
     public void updateOneFrame() {
+        updateAnimations();
         draw();
     }
 
@@ -276,6 +315,11 @@ public class DfCanvas extends Canvas {
         }
         if (hexMap != null) {
             hexMap.draw(gc);
+        }
+
+        // Draw animations
+        for (SpriteAnimationInstance anim : animationList) {
+            anim.draw(gc);
         }
 
         // Lastly draw the dialogue window, no matter which canvas

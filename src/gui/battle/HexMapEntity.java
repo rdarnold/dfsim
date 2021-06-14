@@ -43,8 +43,8 @@ public class HexMapEntity extends MovablePolygon {
 
     public Person partyMember = null;
     public DfMon mon = null;
-
-    public static int defSize = 30;
+    public boolean isPartyMember() { return partyMember != null; }
+    public boolean isMonster() { return mon != null; }
 
     public int hp = 0;
     public int curMov = 0;
@@ -68,6 +68,7 @@ public class HexMapEntity extends MovablePolygon {
     protected Constants.Dir facing = Constants.Dir.SOUTH;
     public Constants.Dir getFacing() { return facing; }
     public void setFacing(Constants.Dir dir) { facing = dir; }
+    public void setRandomFacing() { facing = Constants.Dir.getRandomDir(); }
     //////////////////////////////
     // End for the SPRITE ONLY ///
     //////////////////////////////
@@ -226,7 +227,7 @@ public class HexMapEntity extends MovablePolygon {
         });*/
 
         makeShape(6);
-        setSize(defSize);
+        setSize(Constants.BASE_HEX_TILE_SIZE);
         setStroke(Color.BLACK);
         setStrokeWidth(1);
 
@@ -323,11 +324,35 @@ public class HexMapEntity extends MovablePolygon {
       return 0;
     }
 
+    public void setAnimating(boolean val) { 
+        if (val == true) {
+            // Checks dupes
+            hexMap.addAnimatingEntity(this);
+            // Can't do another move until we finish animating
+            // this one; the variable is reset on the onFinish of the timeline.
+            canMove = false;
+        }
+        else {
+            // May or may not be able to move upon completion so we don't reset
+            // the canMove here, we do it elsewhere
+            hexMap.removeAnimatingEntity(this);
+            canMove = true;
+        }
+    }
+
     // Update the movement state as the sprites walk around.
     public void updateMoveState() {
-        if (partyMember == null || partyMember.getSprite() == null) {
+        CharSprite spr = null;
+        if (partyMember != null) {
+            spr = partyMember.getSprite();
+        }
+        if (mon != null) {
+            spr = mon.getSprite();
+        }
+        if (spr == null) {
             return;
         }
+
         if (moveStateReverse == true) {
             moveState--;
         }
@@ -338,7 +363,7 @@ public class HexMapEntity extends MovablePolygon {
         if (moveState <= 0) {
             moveStateReverse = false;
         }
-        else if (moveState >= partyMember.getSprite().getNumMoveStates()-1) {
+        else if (moveState >= spr.getNumMoveStates()-1) {
             moveStateReverse = true;
         }
     }
@@ -346,42 +371,55 @@ public class HexMapEntity extends MovablePolygon {
     // Can be overridden if we want any custom logic for any subclasses
     protected void onMoveFinished() { }
 
-    // Finished with the movemovemen
+    // Finished with the movement
     private void timelineFinished() {
         onMoveFinished();
-        canMove = true;
         setHex(getMovingToHex());
         setMovingToHex(null);
         movePath.clear();
+        setAnimating(false);
     }
 
-    // Before we do the move, we want to turn in the right direction, etc.,
-    // maybe check something else, who knows
-    protected void onPreMoveOneTile() { 
+    // Which ordinal is this entity moving towards?
+    public Constants.Ordinal getMovingInOrdinal() {
         if (getHex() == null || movePath == null || movePath.size() <= 0) {
-            return;
+            return Constants.Ordinal.NONE;
         }
         // Set our facing dir based on where we are gonna move.
         HexMapTile nextTile = movePath.get(0);
         HexMapTile curTile = getHex();
 
         if (nextTile == curTile.getAdjacentTileForNumber(Constants.Ordinal.NORTHWEST.val())) {
-            setFacing(Constants.Dir.WEST);
+            return Constants.Ordinal.NORTHWEST;
         }
         else if (nextTile == curTile.getAdjacentTileForNumber(Constants.Ordinal.NORTH.val())) {
-            setFacing(Constants.Dir.NORTH);
+            return Constants.Ordinal.NORTH;
         }
         else if (nextTile == curTile.getAdjacentTileForNumber(Constants.Ordinal.NORTHEAST.val())) {
-            setFacing(Constants.Dir.EAST);
+            return Constants.Ordinal.NORTHEAST;
         }
         else if (nextTile == curTile.getAdjacentTileForNumber(Constants.Ordinal.SOUTHEAST.val())) {
-            setFacing(Constants.Dir.EAST);
+            return Constants.Ordinal.SOUTHEAST;
         }
         else if (nextTile == curTile.getAdjacentTileForNumber(Constants.Ordinal.SOUTH.val())) {
-            setFacing(Constants.Dir.SOUTH);
+            return Constants.Ordinal.SOUTH;
         }
         else if (nextTile == curTile.getAdjacentTileForNumber(Constants.Ordinal.SOUTHWEST.val())) {
-            setFacing(Constants.Dir.WEST);
+            return Constants.Ordinal.SOUTHWEST;
+        }
+        return Constants.Ordinal.NONE;
+    }
+
+    // Before we do the move, we want to turn in the right direction, etc.,
+    // maybe check something else, who knows
+    protected void onPreMoveOneTile() { 
+        switch (getMovingInOrdinal()) {
+            case NORTHWEST: setFacing(Constants.Dir.WEST);  break;
+            case NORTH:     setFacing(Constants.Dir.NORTH); break;
+            case NORTHEAST: setFacing(Constants.Dir.EAST);  break;
+            case SOUTHEAST: setFacing(Constants.Dir.EAST);  break;
+            case SOUTH:     setFacing(Constants.Dir.SOUTH); break;
+            case SOUTHWEST: setFacing(Constants.Dir.WEST);  break;
         }
     }
 
@@ -393,9 +431,11 @@ public class HexMapEntity extends MovablePolygon {
             return;
         }
 
-        // Get the hex for our current coordinates
+        // Transition to next hex tile
+        getHex().removeContains(this);
         setPrevHex(getHex());
         setHex(movePath.get(0));
+        getHex().addContains(this);
         movePath.remove(0);
 
         if (movePath.size() > 0) {
@@ -405,46 +445,56 @@ public class HexMapEntity extends MovablePolygon {
             setNextHex(null);
         }
         
+        // If we are passing through an entity, it "moves aside" slightly
+        // depending on what direction we are moving to.  This could also
+        // be based on the direction we are coming from to make it look 
+        // nicer.
+        if (getHex().getNumberContains() > 1) {
+            for (HexMapEntity ent : getHex().getContainsList()) {
+                if (ent != this) {
+                    ent.doAnimatedDodge(getMovingInOrdinal());
+                }
+            }
+        }
+
         // We might pass by enemies and take AoAs and shit.
         // TODO check enemies etc.
     }
 
+    private int m_nTimeIntervalMS = 150;
     public void doAnimatedMove(double x, double y) {
-        // Can't do another move until we finish animating
-        // this one; the variable is reset on the onFinish of the timeline.
-        canMove = false;
+        setAnimating(true);
 
         // timeline that moves the screen
         timeline.getKeyFrames().clear();
 
         // Add frames based on steps of the move.
-        int timeIntervalMS = 150;
-        int timePointMS = timeIntervalMS;
+        int timePointMS = m_nTimeIntervalMS;
 
         movePath.clear();
 
         HexMapTile hex = hexMap.getNextCurMovPathTile();
-        movePath.add(hex);
         setNextHex(hex);
         setPrevHex(null);
 
         while (hex != null) {
-            hex.setCurMovPath(false);
+            movePath.add(hex);
+
+            hex.setOnCurMovPath(false);
             hex.setCurMovStep(0);
             
             // The "millis" is at what point in time this frame occurs, so we can do "multiple things at once"
             // if we set the same time point but we have to increase this to cause a multiple-frame animation.
             // So first we do onPreMoveOneTile before we do the move, then we move, then we do onPostMoveOneTile
             timeline.getKeyFrames().addAll(
-                new KeyFrame(Duration.millis(timePointMS - timeIntervalMS), e -> onPreMoveOneTile()),
+                new KeyFrame(Duration.millis(timePointMS - m_nTimeIntervalMS), e -> onPreMoveOneTile()),
                 new KeyFrame(Duration.millis(timePointMS), e -> onPostMoveOneTile()),
                 new KeyFrame(Duration.millis(timePointMS), new KeyValue(centerXProperty(), hex.getCenterX())),
                 new KeyFrame(Duration.millis(timePointMS), new KeyValue(centerYProperty(), hex.getCenterY()))
             );
 
             hex = hexMap.getNextCurMovPathTile();
-            movePath.add(hex);
-            timePointMS += timeIntervalMS;
+            timePointMS += m_nTimeIntervalMS;
         }
 
         // If our last one in the path isn't the one we're moving to (like we are basically click-moving where we
@@ -455,7 +505,7 @@ public class HexMapEntity extends MovablePolygon {
         setNextHex(movePath.get(0));
 
         timeline.getKeyFrames().addAll(
-            new KeyFrame(Duration.millis(timePointMS - timeIntervalMS), e -> onPreMoveOneTile()),
+            new KeyFrame(Duration.millis(timePointMS - m_nTimeIntervalMS), e -> onPreMoveOneTile()),
             new KeyFrame(Duration.millis(timePointMS), e -> onPostMoveOneTile()),
             new KeyFrame(Duration.millis(timePointMS), new KeyValue(centerXProperty(), x)),
             new KeyFrame(Duration.millis(timePointMS), new KeyValue(centerYProperty(), y))
@@ -463,6 +513,50 @@ public class HexMapEntity extends MovablePolygon {
 
         timeline.play();
     }
+    
+    // Finished with the dodge
+    private void dodgeFinished() {
+        setAnimating(false);
+    }
+
+    public void doAnimatedDodge(Constants.Ordinal dir) {
+        setAnimating(true);
+
+        Timeline tl = new Timeline(60);
+        tl.setOnFinished(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                dodgeFinished();
+            }
+        });
+
+        double movedX = getCenterX();
+        double movedY = getCenterY();
+        double diff = 10;
+        // If the person is moving southeast, we want to dodge
+        // northeast.  Basically we dodge in the 90 degree of
+        // dir so it looks like we are moving away.
+        switch (dir) {
+            case NORTHWEST: movedX += diff; movedY -= diff; break;
+            case NORTH:     movedX += diff; break;
+            case NORTHEAST: movedX -= diff; movedY -= diff; break;
+            case SOUTHEAST: movedX += diff; movedY -= diff; break;
+            case SOUTH:     movedX -= diff; break; // Could randomize for more flavor.
+            case SOUTHWEST: movedX -= diff; movedY -= diff; break;
+            default:
+                movedX += diff; movedY -= diff; break;
+        }
+
+        tl.getKeyFrames().addAll(
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS), new KeyValue(centerXProperty(), movedX)),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS), new KeyValue(centerYProperty(), movedY)),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS*2), new KeyValue(centerXProperty(), getCenterX())),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS*2), new KeyValue(centerYProperty(), getCenterY()))
+        );
+
+        tl.play();
+    }
+
     
     public boolean moveToTile(HexMapTile tile) {
         return moveToTile(tile, true);
@@ -488,6 +582,50 @@ public class HexMapEntity extends MovablePolygon {
         }
         return true;
     }
+    
+    // Finished with the attack
+    // TODO all of this
+    /*private void attackFinished() {
+        setAnimating(false);
+    }
+
+    public void doAnimatedAttack(HexMapEntity target) {
+        setAnimating(true);
+
+        Timeline tl = new Timeline(60);
+        tl.setOnFinished(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                attackFinished();
+            }
+        });
+
+        double movedX = getCenterX();
+        double movedY = getCenterY();
+        double diff = 10;
+        // If the person is moving southeast, we want to dodge
+        // northeast.  Basically we dodge in the 90 degree of
+        // dir so it looks like we are moving away.
+        switch (dir) {
+            case NORTHWEST: movedX += diff; movedY -= diff; break;
+            case NORTH:     movedX += diff; break;
+            case NORTHEAST: movedX -= diff; movedY -= diff; break;
+            case SOUTHEAST: movedX += diff; movedY -= diff; break;
+            case SOUTH:     movedX -= diff; break; // Could randomize for more flavor.
+            case SOUTHWEST: movedX -= diff; movedY -= diff; break;
+            default:
+                movedX += diff; movedY -= diff; break;
+        }
+
+        tl.getKeyFrames().addAll(
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS), new KeyValue(centerXProperty(), movedX)),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS), new KeyValue(centerYProperty(), movedY)),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS*2), new KeyValue(centerXProperty(), getCenterX())),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS*2), new KeyValue(centerYProperty(), getCenterY()))
+        );
+
+        tl.play();
+    }*/
 
     @Override
     public void draw(GraphicsContext gc) {

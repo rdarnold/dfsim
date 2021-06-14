@@ -375,6 +375,28 @@ public final class Utils {
             }
         });
     }
+    
+    
+    /*public static boolean insidePolygon(Point2D point, MovablePolygon poly) {
+        return insidePolygon(point.getX(), point.getY(), poly);
+    }
+
+    public static boolean insidePolygon(int x, int y, MovablePolygon poly) {
+        //function inside(point, vs) {
+        // ray-casting algorithm based on
+        // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html/pnpoly.html
+
+        boolean inside = false;
+        for (int i = 0, j = poly.getNumPoints() - 1; i < poly.getNumPoints(); j = i++) {
+            int xi = vs[i][0], yi = vs[i][1];
+            int xj = vs[j][0], yj = vs[j][1];
+            
+            boolean intersect = ((yi > y) != (yj > y))
+                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    };*/
 
     public static String getFileExtensionFromName(String fileName) {
         return fileName.substring(fileName.lastIndexOf('.') + 1);

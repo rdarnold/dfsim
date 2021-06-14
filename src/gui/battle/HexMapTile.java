@@ -18,6 +18,7 @@ import dfsim.*;
 
 public class HexMapTile extends MovablePolygon {
 
+    // Can use HexTileType.Grass.name() to return "Grass" as the string.
     public enum HexTileType {
         Blank,
         Grass,
@@ -33,6 +34,14 @@ public class HexMapTile extends MovablePolygon {
         DeepWater
     }
 
+    // So we can do BFS for pathfinding
+    private int m_nCost = 0;
+    public int getCost() { return m_nCost; }
+    private boolean bfsMark = false;
+    public void mark(int cost) { bfsMark = true; m_nCost = cost;}
+    public void unmark() { bfsMark = false; m_nCost = 0; }
+    public boolean marked() { return bfsMark; }
+
     // Where in the HexMap is this HexMapTile?
     int hexMapX = 0; 
     int hexMapY = 0;
@@ -41,12 +50,51 @@ public class HexMapTile extends MovablePolygon {
 
     private HexMap hexMap;
 
-    public HexMapEntity contains; // does this HexMapTile contain someone / another HexMapEntity?
+    /////////////////////////////////////////////////////
+    // Processing for the list of entities on the tile //
+    /////////////////////////////////////////////////////
+    private ArrayList<HexMapEntity> containsList = new ArrayList<HexMapEntity>(); // does this HexMapTile contain someone / another HexMapEntity?
+    public ArrayList<HexMapEntity> getContainsList() { return containsList; }; 
+    public int getNumberContains() { return containsList.size(); }; 
+    public void clearContains() { containsList.clear(); }; 
+    public HexMapEntity getContains() { return containsList.get(0); }; 
+    public void removeContains(HexMapEntity ent) { containsList.remove(ent); }; 
+    public boolean addContains(HexMapEntity ent) { 
+        if (ent != null) {
+            containsList.add(ent);
+            return true;
+        }
+        return false;
+    }
+    //public void setContains(HexMapEntity ent) { contains = ent; }
+    public boolean setContainsIfEmpty(HexMapEntity ent) { 
+        if (getNumberContains() > 0) {
+            return false;
+        }
+        return addContains(ent); 
+    }
+    public boolean containsHexMapEntity() { return (containsList.size() > 0); }
     public boolean containsHexMapEntity(HexMapEntity ent) {
         if (ent == null)
             return false;
-        return (contains == ent);
+        return (containsList.contains(ent));
     }
+    public boolean containsEnemy(HexMapEntity ent) {
+        if (containsList.size() != 0 && ent != null) {
+            for (HexMapEntity cont : containsList) {
+                if (ent.isPartyMember() && cont.isMonster()) {
+                    return true;
+                }
+                else if (cont.isPartyMember() && ent.isMonster()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    /////////////////////////////////////////////////////
+    // End contains processing //////////////////////////
+    /////////////////////////////////////////////////////
 
     // Entities bordering this one
     public HexMapTile northwest;
@@ -56,23 +104,48 @@ public class HexMapTile extends MovablePolygon {
     public HexMapTile south;
     public HexMapTile southeast;
 
+    public HexMapTile getNorthwest()    { return northwest; }
+    public HexMapTile getNorth()        { return north; }
+    public HexMapTile getNortheast()    { return northeast; }
+    public HexMapTile getSouthwest()    { return southwest; }
+    public HexMapTile getSouth()        { return south; }
+    public HexMapTile getSoutheast()    { return southeast; }
+
+    // Get bordsering tile by ordinal direction
+    public HexMapTile getByOrdinal(Constants.Ordinal dir) {
+        switch (dir) {
+            case NORTHWEST: return northwest;
+            case NORTH:     return north;
+            case NORTHEAST: return northeast;
+            case SOUTHWEST: return southwest;
+            case SOUTH:     return south;
+            case SOUTHEAST: return southeast;
+        }
+        return null;
+    }
+
     public HexTileType type = HexTileType.Blank;
-    public boolean canMoveTo = false; // Can currently selected HexMapEntity move to this tile?
-    public boolean curMovPath = false; // Part of the current movement path?
-    public int curMovStep = 0;
+    public boolean m_bCanMoveToFlag = false; // Can currently selected HexMapEntity move to this tile?
+    public boolean m_bIsOnCurMovPath = false; // Part of the current movement path?
+    public int m_nCurMovStep = 0;
 
     //public int percent = 0; // transient variable to be used for whatever generation
 
-    public void setCanMoveTo(boolean can) { canMoveTo = can; }
-    public void setCurMovPath(boolean can) { curMovPath = can; }
-    public void setCurMovStep(int num) { curMovStep = num; }
-    public boolean getCanMoveTo() { return canMoveTo; }
-    public boolean getCurMovPath() { return curMovPath; }
-    public int getCurMovStep() { return curMovStep; }
+    public void setCanMoveToFlag(boolean can) { m_bCanMoveToFlag = can; updateColor(); }
+    public void setOnCurMovPath(boolean can) { m_bIsOnCurMovPath = can; updateColor(); }
+    public void setCurMovStep(int num) { m_nCurMovStep = num; }
+    public boolean getCanMoveToFlag() { return m_bCanMoveToFlag; }
+    public boolean isOnCurMovPath() { return m_bIsOnCurMovPath; }
+    public int getCurMovStep() { return m_nCurMovStep; }
 
     public void setType(HexTileType newType) { type = newType; updateColor(); }
     public HexTileType getType() { return type; }
 
+    // What tile sprite to draw?  If null just draw color
+    protected GameSprite m_Sprite = null;
+    public void setGameSprite(GameSprite gs) { m_Sprite = gs; }
+    public GameSprite getGameSprite() { return m_Sprite; }
+    public int spriteFrameIndex = 0; // Index into the sprite sheet in terms of what sprite to actually draw
 
     public HexMapTile(HexMap map) {
         super();
@@ -96,134 +169,26 @@ public class HexMapTile extends MovablePolygon {
         getSelectedPolygon().setUserData(this);
 
         makeShape(6);
+        setSize(Constants.BASE_HEX_TILE_SIZE);
     }
 
-    /*private void handleMouseEnter(Object objHex, MouseEvent event) {
-        if (objHex == null) 
-            return;
-        HexMapTile hex = (HexMapTile)objHex;
-        DfSim.sim.onMouseEnterHexMapTile(hex);
-    }
-
-    // Deprecated... it's not handled here anymore
-    private void handleClick(Object objHex, MouseEvent event) {
-        if (objHex == null) 
-            return;
-        HexMapTile hex = (HexMapTile)objHex;
-        if (event.getButton() == MouseButton.PRIMARY) {
-            DfSim.sim.onLeftClickHexMapTile(hex);
-        }
-        else {
-            DfSim.sim.onRightClickHexMapTile(hex);
-        }
-    }
-
-    // Deprecated... it's not handled here anymore
-    private void setupMouseHandler() {
-        
-        // Override the HexMapEntity clicks with these ones.
-        shapeText.setUserData(this);
-        getSelectedCircle().setUserData(this);
-        overlay.setUserData(this);
-        selectedPolygon.setUserData(this);
-
-        setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                handleClick(event.getSource(), event);
-            }
-        });
-        setOnMouseEntered(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                handleMouseEnter(event.getSource(), event);
-            }
-        });
-        
-        overlay.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                MovablePolygon source = (MovablePolygon)event.getSource();
-                handleClick(source.getUserData(), event);
-            }
-        });
-        overlay.setOnMouseEntered(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                MovablePolygon source = (MovablePolygon)event.getSource();
-                handleMouseEnter(source.getUserData(), event);
-            }
-        });
-        
-        shapeText.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                Text source = (Text)event.getSource();
-                handleClick(source.getUserData(), event);
-            }
-        });
-        shapeText.setOnMouseEntered(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                Text source = (Text)event.getSource();
-                handleMouseEnter(source.getUserData(), event);
-            }
-        });
-
-        getSelectedCircle().setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                Circle source = (Circle)event.getSource();
-                handleClick(source.getUserData(), event);
-            }
-        });
-        getSelectedCircle().setOnMouseEntered(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                Circle source = (Circle)event.getSource();
-                handleMouseEnter(source.getUserData(), event);
-            }
-        });
-
-        selectedPolygon.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                MovablePolygon source = (MovablePolygon)event.getSource();
-                handleClick(source.getUserData(), event);
-            }
-        });
-        selectedPolygon.setOnMouseEntered(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                MovablePolygon source = (MovablePolygon)event.getSource();
-                handleMouseEnter(source.getUserData(), event);
-            }
-        });
-    }*/
-
-    public boolean attach(HexMapEntity ent) {
+    /*public boolean attach(HexMapEntity ent) {
         if (contains != null) {
             return false;
         }
-        /*if (ent.getHex() != null) {
-            ent.getHex().detach();
-        }*/
         contains = null;
         ent.moveToTile(this);
-        //ent.centerOn(this);
-        //pullTo(ent);
-        //ent.setHex(this);
         contains = ent;
         return true;
-    }
+    }*/
 
-    public void detach() {
+    /*public void detach(HexMapEntity ent) {
         if (contains != null) {
             contains.setHex(null);
             contains.setPrevHex(null);
         }
         contains = null;
-    }
+    }*/
 
     /*private void addCurMovPathTilesToMovement(Path path) {
         // And follow a move path if we have one
@@ -285,12 +250,12 @@ public class HexMapTile extends MovablePolygon {
 
     public int numberAdjacentCurMovPathTiles() {
         int num = 0;
-        if (northeast != null && northeast.getCurMovPath() == true) num++;
-        if (north     != null && north.getCurMovPath() == true)     num++;
-        if (northwest != null && northwest.getCurMovPath() == true) num++;
-        if (southwest != null && southwest.getCurMovPath() == true) num++;
-        if (south     != null && south.getCurMovPath() == true)     num++;
-        if (southeast != null && southeast.getCurMovPath() == true) num++;
+        if (northeast != null && northeast.isOnCurMovPath() == true) num++;
+        if (north     != null && north.isOnCurMovPath() == true)     num++;
+        if (northwest != null && northwest.isOnCurMovPath() == true) num++;
+        if (southwest != null && southwest.isOnCurMovPath() == true) num++;
+        if (south     != null && south.isOnCurMovPath() == true)     num++;
+        if (southeast != null && southeast.isOnCurMovPath() == true) num++;
         return num;
     }
 
@@ -359,17 +324,20 @@ public class HexMapTile extends MovablePolygon {
         return null;
     }
 
-    public boolean traversable(boolean isFlying) {
-        if (isFlying == true) {
+    public boolean traversable(HexMapEntity ent) {
+        // If mover is flying, etc., maybe they can pass.
+        /*if (isFlying == true) {
             return true;
-        }
-        if (moveCost() < 0)
+        }*/
+        if (moveCost(ent) < 0) {
             return false;
+        }
         return true;
     }
     
-
-    public int moveCost() {
+    // Should also be based on the entity moving here
+    public int moveCost(HexMapEntity ent) {
+        // Add in processing for mover entity
         switch (type) {
             case Blank:         return 1;
             case Grass:         return 1;
@@ -387,7 +355,37 @@ public class HexMapTile extends MovablePolygon {
         return 1;
     }
 
-    public void updateColor() {
+    public void updateGraphics() {
+        updateColor();
+        updateImage();
+    }
+
+    private void updateImage() {
+        if (Data.hexTileSprites == null || Data.hexTileSprites.size() <= 0) {
+            m_Sprite = null;
+            return;
+        }
+
+        // This is LOADS better, I should use this method for other things as well.
+        m_Sprite = GraphicsUtils.getSpriteForKey(Data.hexTileSprites, type.name());
+
+        /*switch (type) {
+            case Blank:         m_Sprite = null; break;
+            case Grass:         m_Sprite = GraphicsUtils.getSpriteForKey(Data.hexTileSprites, HexTileType.Grass.name()); break;
+            case Field:         m_Sprite = GraphicsUtils.getSpriteForKey(Data.hexTileSprites, HexTileType.Grass.name()); break;
+            case Sand:          m_Sprite = Data.hexTileSprites.get(); break;
+            case Dirt:          m_Sprite = Data.hexTileSprites.get(); break;
+            case Tree:          m_Sprite = Data.hexTileSprites.get(); break;
+            case Log:           m_Sprite = Data.hexTileSprites.get(); break;
+            case Stone:         m_Sprite = Data.hexTileSprites.get(); break;
+            case Wall:          m_Sprite = Data.hexTileSprites.get(); break;
+            case Street:        m_Sprite = Data.hexTileSprites.get(); break;
+            case ShallowWater:  m_Sprite = Data.hexTileSprites.get(); break;
+            case DeepWater:     m_Sprite = Data.hexTileSprites.get(); break;
+        }*/
+    }
+
+    private void updateColor() {
         
         setStroke(Color.GRAY);
 
@@ -405,9 +403,9 @@ public class HexMapTile extends MovablePolygon {
             case ShallowWater: setFill(Color.LIGHTSKYBLUE); break;
             case DeepWater:    setFill(Color.BLUE); break;
         }
-
+        
         // If can move to, outline it or something.
-        if (canMoveTo == false && curMovPath == false) {
+        if (getCanMoveToFlag() == false && isOnCurMovPath() == false) {
             //setStroke(Color.BLACK);
             //setStrokeWidth(1);
             //overlay.setFill(Color.WHITE);
@@ -420,22 +418,47 @@ public class HexMapTile extends MovablePolygon {
             //setStrokeWidth(1);
             overlay.setFill(Color.TOMATO);
             overlay.setVisible(true);
-            if (canMoveTo == true) {
-                overlay.setStroke(Color.GRAY);
-                overlay.opacityProperty().set(0.3);
-            }
-            if (curMovPath == true) {
+            if (isOnCurMovPath() == true) {
                 overlay.setStroke(Color.BLACK);
                 overlay.opacityProperty().set(0.6);
             }
+            else if (getCanMoveToFlag() == true) {
+                overlay.setStroke(Color.GRAY);
+                overlay.opacityProperty().set(0.3);
+            }
         }
     }
-    
+
+    public boolean isSelected() {
+        return (this == hexMap.getSelectedHexMapTile());
+    }
+
     @Override
     public void draw(GraphicsContext gc) {
-
+    
         // If no graphics, call base class
-        super.draw(gc);
+        if (getGameSprite() == null) {
+            super.draw(gc);
+            return;
+        }
+
+        if (getGameSprite() != null) {
+            // Are these weird adjustments working for ALL hex tiles - i.e. tey're a quirk of the calculations
+            // done for LeftX etc on MovablePolygon - or are they JUST for the VNHex tiles?
+            getGameSprite().drawFullImage(gc, getLeftX() - 2, getTopY(), getSize() + 2, getSize() - 4);
+        }
+        
+        // If we are selected, indicate this with some kind of overlay.
+        if (isSelected() == true) {
+            gc.setGlobalAlpha(0.5);
+            gc.setFill(Color.DARKGRAY);
+            gc.setLineWidth(5);
+            gc.fillPolygon(getXPoints(), getYPoints(), getNumPoints());
+            gc.setGlobalAlpha(1.0);
+        }
+
+        super.drawOverlay(gc);
+        super.drawText(gc);
 
         // Only draw if we are visible
         /*double drawX = getX() + map.getXOffset();

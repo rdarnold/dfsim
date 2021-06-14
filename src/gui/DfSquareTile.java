@@ -46,7 +46,7 @@ public abstract class DfSquareTile extends Rectangle {
 
     protected GameSprite bgrdSprite = null;
     public void setBackgroundSprite(GameSprite i) { bgrdSprite = i; }
-    public GameSprite getBackgroundSprite() { return gs; }
+    public GameSprite getBackgroundSprite() { return bgrdSprite; }
     public int bgrdSpriteFrameIndex = 0; // Is there a background sprite to draw for this tile
 
     public int mapX = 0;

@@ -540,20 +540,8 @@ public class MovablePolygon extends Polygon {
         double radiusSum = otherCircle.getRadius() + boundingCircle.getRadius();
         return distanceX * distanceX + distanceY * distanceY <= radiusSum * radiusSum;
     }
-    
-    public void drawSelected(GraphicsContext gc) {
-        gc.setStroke(selectedPolygon.getStroke());
-        gc.setLineWidth(selectedPolygon.getStrokeWidth());
-        gc.strokePolygon(getXPoints(), getYPoints(), getNumPoints());
-    }
 
-    public void draw(GraphicsContext gc) {
-        gc.setFill(getFill());
-        gc.setStroke(getStroke());
-        gc.setLineWidth(getStrokeWidth());
-        gc.fillPolygon(getXPoints(), getYPoints(), getNumPoints());
-        gc.strokePolygon(getXPoints(), getYPoints(), getNumPoints());
-
+    public void drawOverlay(GraphicsContext gc) {
         // Now draw the overlay
         if (overlay != null && overlay.isVisible()) {
             gc.setGlobalAlpha(overlay.opacityProperty().get());
@@ -570,12 +558,30 @@ public class MovablePolygon extends Polygon {
     
             gc.setGlobalAlpha(1.0);
         }
-        
+    }
+
+    public void drawText(GraphicsContext gc) {
         // Finally the text
         gc.setStroke(Color.BLACK);
         gc.setFill(Color.BLACK);
         if (getShapeStr() != null && getShapeStr().equals("") == false) {
             gc.fillText(getShapeStr(), getCenterX() - 5, getCenterY() + 5);
         }
+    }
+    
+    public void drawSelected(GraphicsContext gc) {
+        gc.setStroke(selectedPolygon.getStroke());
+        gc.setLineWidth(selectedPolygon.getStrokeWidth());
+        gc.strokePolygon(getXPoints(), getYPoints(), getNumPoints());
+    }
+
+    public void draw(GraphicsContext gc) {
+        gc.setFill(getFill());
+        gc.setStroke(getStroke());
+        gc.setLineWidth(getStrokeWidth());
+        gc.fillPolygon(getXPoints(), getYPoints(), getNumPoints());
+        gc.strokePolygon(getXPoints(), getYPoints(), getNumPoints());
+        drawOverlay(gc);
+        drawText(gc);
     }
 }

@@ -198,9 +198,10 @@ public class DfScreen extends Scene {
 
     // Meant to be overridden
     public void processKeyRelease(KeyCode key) { 
-        switch (key) {
+        /*switch (key) {
             case ENTER:  DfSim.sim.nextDialogue(); break;
-        }
+            case SPACE:  DfSim.sim.nextDialogue(); break;
+        }*/
     }
 
     // We interpret some keys at this level.  If it is a key we
@@ -209,6 +210,9 @@ public class DfScreen extends Scene {
     // here.
     private boolean processBaseKeyPress(KeyCode key) { 
         if (DfSim.noInput == true) {
+            return false;
+        }
+        if (DfSim.sim.isShowingDialogue() == true) {
             return false;
         }
         switch (key) {
@@ -225,6 +229,9 @@ public class DfScreen extends Scene {
     }
 
     private boolean processBaseKeyRelease(KeyCode key) { 
+        if (DfSim.sim.checkAndAdvanceDialogue() == true) {
+            return false;
+        }
         switch (key) {
             case RIGHT: arrowRightPressed = false;  return true;
             case LEFT:  arrowLeftPressed = false;   return true;

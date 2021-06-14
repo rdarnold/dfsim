@@ -89,6 +89,7 @@ public class DfSim extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        primaryStage.setResizable(false);
         dfsim = this;
         Utils.init();
 

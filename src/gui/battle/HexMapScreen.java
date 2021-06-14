@@ -51,6 +51,7 @@ public class HexMapScreen extends DfScreen {
     public TextArea mainTextArea;
 
     private DfCanvas canvas;
+    public DfCanvas getCanvas() { return canvas; };
 
     public HexMapScreen(BorderPane root, int wid, int hgt) {
         super(root, wid, hgt);
@@ -296,6 +297,10 @@ public class HexMapScreen extends DfScreen {
         btn.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                // Must check if input allowed on all input methods on this screen
+                if (hexMap.inputAllowed() == false) {
+                    return;
+                }
             }
         });
         bottomArea.getChildren().add(btn);
