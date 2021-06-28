@@ -456,17 +456,17 @@ public final class GraphicsLoader {
     }
 
     public static void loadSpriteAnimations() {
-        if (Constants.USING_HITS2 == true) {
+        if (Constants.USING_SINESTESIA == true) {
             loadHits2Images();
         }
     }
 
     public static void loadHits2Images() {
         // Scale the large image on load
-        loadAllSpriteAnimationsFromFolder("." + Constants.HITS2_PATH, Data.atkAnimSprites, 1024);
+        loadAllSpriteAnimationsFromFolder("." + Constants.SINESTESIA_PATH, Data.atkAnimSprites, 1024);
 
         // Now call the sprite handler to set up these sprites
-        SpriteHandler_Hits2.setupAttackSprites();
+        SpriteHandler_Sinestesia.setupAttackSprites();
     }
 
     public static void loadTimeFantasyMonsters() {

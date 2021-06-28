@@ -46,6 +46,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.ListProperty;
 
+import javafx.scene.canvas.*;
+
 import dfsim.*;
 
 public class DunMapScreen extends DfScreen {
@@ -57,8 +59,6 @@ public class DunMapScreen extends DfScreen {
 
     private DunMapScreen thisScreen;
 
-    private DfCanvas canvas;
-
     //private StackPane stackPane;
     //private Pane mainArea;
 
@@ -68,7 +68,6 @@ public class DunMapScreen extends DfScreen {
         super(root, width, height);
         thisScreen = this;
         createButtons();
-        canvas = new DfCanvas(width, height);
         getMainPane().getChildren().add(canvas);
     }
 
@@ -209,19 +208,34 @@ public class DunMapScreen extends DfScreen {
         }
     }
     
+    @Override
     public void updateOneFrame() {
+        super.updateOneFrame();
         if (isActive() == false) {
             return;
         }
 
-        if (canvas != null) {
+        /*if (canvas != null) {
             canvas.updateOneFrame();
-        }
+        }*/
 
         if (dun != null) {
             dun.updateOneFrame();
         }
 
         updateInput();
+        draw();
+    }
+    
+    @Override
+    public void draw() {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, getWidth(), getHeight());
+
+        if (dun != null) {
+            dun.draw(gc);
+        }
+
+        canvas.draw();
     }
 }

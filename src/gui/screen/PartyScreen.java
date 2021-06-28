@@ -50,6 +50,9 @@ import javafx.beans.property.ListProperty;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
 
+import javafx.scene.paint.*;
+import javafx.scene.canvas.*;
+
 import dfsim.*;
 import dfsim.gui.*;
 
@@ -67,6 +70,7 @@ public class PartyScreen extends DfScreen {
     public PartyScreen(BorderPane root, int width, int height) {
         super(root, width, height);
         thisScreen = this;
+        getMainPane().getChildren().add(canvas);
         init();
     }
 
@@ -315,5 +319,32 @@ public class PartyScreen extends DfScreen {
 
         setupGifTest();
         getUIPane().getChildren().add(gifTest);
+    }
+    
+    @Override
+    public void updateOneFrame() {
+        super.updateOneFrame();
+        if (isActive() == false) {
+            return;
+        }
+
+        draw();
+    }
+    
+    //Stop[] stops = new Stop[] { new Stop(0, Color.LIGHTGRAY), new Stop(0.5, Color.SKYBLUE), new Stop(1, Color.LIGHTSKYBLUE)};
+    Stop[] stops = new Stop[] { new Stop(0, Color.LIGHTGRAY), new Stop(1, Color.LIGHTSKYBLUE)};
+    LinearGradient lg1 = new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE, stops);
+    
+    @Override
+    public void draw() {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, getWidth(), getHeight());
+
+        // Any specific drawing here
+        gc.setFill(lg1);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
+        // And finally the canvas which draws anims, dialogue window
+        canvas.draw();
     }
 }

@@ -178,7 +178,7 @@ public class Person  {
 
     public String toStringStats() {
       String temp = "";
-      if (met == false) {
+      if (m_bHasBeenMet == false) {
         temp += "Str: ???\r\n";
         temp += "Agi: ???\r\n";
         temp += "Dex: ???\r\n";
@@ -317,6 +317,9 @@ public class Person  {
     public int affection = 0;
     public int mated = 0;
 
+    public int getMated() { return mated; }
+    public int getAffection() { return affection; }
+
     private Portrait portrait = null;
     public Portrait getPortrait() { return portrait; }
     public void setPortrait(Portrait p) { portrait = p; }
@@ -325,8 +328,9 @@ public class Person  {
     public CharSprite getSprite() { return sprite; }
     public void setSprite(CharSprite s) { sprite = s; }
 
-    public boolean met = false; // Show stats or no over hover?  Have we "met" this person
-    public void setMet(boolean isMet) { met = isMet; }
+    public boolean m_bHasBeenMet = false; // Show stats or no over hover?  Have we "met" this person
+    public void setHasBeenMet(boolean isMet) { m_bHasBeenMet = isMet; }
+    public boolean getHasBeenMet() { return m_bHasBeenMet; }
 
     public DfEquipW eqWeapon1 = null;
     public DfEquipW eqWeapon2 = null;

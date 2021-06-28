@@ -40,7 +40,7 @@ src/gui/town/Town.java
 src/gui/town/TownMap.java
 src/gui/town/TownMapAvatar.java
 src/gui/town/TownMapEntity.java
-src/gui/town/TownMapPerson.java
+src/gui/town/TownMapPersonEntity.java
 src/gui/town/TownMapScreen.java
 src/gui/town/TownMapTile.java
 src/item/DfEqItem.java
@@ -58,13 +58,14 @@ src/utils/DfNameList.java
 src/utils/ExcelUtils.java
 src/utils/Settings.java
 src/utils/Utils.java
+src/utils/audio/AudioLoader.java
 src/utils/graphics/CharSprite.java
 src/utils/graphics/GameSprite.java
 src/utils/graphics/GraphicsLoader.java
 src/utils/graphics/GraphicsUtils.java
 src/utils/graphics/SpriteAnimation.java
 src/utils/graphics/SpriteAnimationInstance.java
-src/utils/graphics/handlers/SpriteHandler_Hits2.java
+src/utils/graphics/handlers/SpriteHandler_Sinestesia.java
 src/utils/graphics/handlers/SpriteHandler_Pipoya.java
 src/utils/graphics/handlers/SpriteHandler_TimeFantasy.java
 src/utils/graphics/handlers/SpriteHandler_VNHex.java

@@ -118,7 +118,7 @@ public final class Data {
             // For everyone we load from the list, set them as "met" because they are
             // party.
             for (Person person : personList) {
-                person.setMet(true);
+                person.setHasBeenMet(true);
             }
             personList.setLeader();
         }

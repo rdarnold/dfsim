@@ -28,7 +28,7 @@ import dfsim.gui.*;
 // Confusing name, the "Person" class is different than entity.
 // Person holds data that persists in different contexts while entities
 // only exist in their specific maps.  This should be renamed.
-public class TownMapPerson extends TownMapEntity {
+public class TownMapPersonEntity extends TownMapEntity {
 
     // Has this person been discovered or not?  If so,
     // we can hover over them and see their stats and name and stuff.
@@ -37,7 +37,7 @@ public class TownMapPerson extends TownMapEntity {
     // we talk to them, then things like personality traits are revealed.
     public boolean discovered = false;
 
-    public TownMapPerson(TownMap theMap) {
+    public TownMapPersonEntity(TownMap theMap) {
         super(theMap, EntityType.Person);
         init();
     }
@@ -46,7 +46,7 @@ public class TownMapPerson extends TownMapEntity {
     protected void handleMouseEnter(Object objEnt, MouseEvent event) {
         if (objEnt == null) 
             return;
-        TownMapPerson ent = (TownMapPerson)objEnt;
+        TownMapPersonEntity ent = (TownMapPersonEntity)objEnt;
         getMap().onMouseEnterPerson(ent);
     }
 
@@ -54,7 +54,7 @@ public class TownMapPerson extends TownMapEntity {
     protected void handleClick(Object objEnt, MouseEvent event) {
         if (objEnt == null) 
             return;
-        TownMapPerson ent = (TownMapPerson)objEnt;
+        TownMapPersonEntity ent = (TownMapPersonEntity)objEnt;
         if (event.getButton() == MouseButton.PRIMARY) {
             getMap().onLeftClickPerson(ent);
         }

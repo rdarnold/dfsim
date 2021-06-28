@@ -64,6 +64,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.ListProperty;
 
+import javafx.scene.canvas.*;
+
 import dfsim.*;
 
 public class LandMapScreen extends DfScreen {
@@ -80,8 +82,6 @@ public class LandMapScreen extends DfScreen {
 
     private MovableButton actionBtn;
 
-    private DfCanvas canvas;
-
     //public TextArea mainTextArea;
 
     public LandMapScreen(BorderPane root, int width, int height) {
@@ -90,7 +90,6 @@ public class LandMapScreen extends DfScreen {
         //hgt = height;
         thisScreen = this;
         landMap = new LandMap();
-        canvas = new DfCanvas(width, height);
         getMainPane().getChildren().add(canvas);
         landMap.addToCanvas(canvas);
         //landMap.addToPane(getMainPane());
@@ -215,11 +214,26 @@ public class LandMapScreen extends DfScreen {
         }
     }
 
+    @Override
     public void updateOneFrame() {
-        if (canvas != null) {
+        super.updateOneFrame();
+        /*if (canvas != null) {
             canvas.updateOneFrame();
-        }
+        }*/
 
         updateInput();
+        draw();
+    }
+
+    @Override
+    public void draw() {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, getWidth(), getHeight());
+
+        if (landMap != null) {
+            landMap.draw(gc);
+        }
+
+        canvas.draw();
     }
 }

@@ -46,6 +46,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.ListProperty;
 
+import javafx.scene.canvas.*;
+
 import dfsim.*;
 import dfsim.gui.*;
 
@@ -58,8 +60,6 @@ public class TownMapScreen extends DfScreen {
 
     private TownMapScreen thisScreen;
 
-    private DfCanvas canvas;
-
     //private StackPane stackPane;
     //private Pane mainArea;
 
@@ -71,7 +71,6 @@ public class TownMapScreen extends DfScreen {
         //hgt = height;
         thisScreen = this;
         createButtons();
-        canvas = new DfCanvas(width, height);
         getMainPane().getChildren().add(canvas);
     }
 
@@ -202,19 +201,34 @@ public class TownMapScreen extends DfScreen {
         }
     }
     
+    @Override
     public void updateOneFrame() {
+        super.updateOneFrame();
         if (isActive() == false) {
             return;
         }
 
-        if (canvas != null) {
+        /*if (canvas != null) {
             canvas.updateOneFrame();
-        }
+        }*/
 
         if (town != null) {
             town.updateOneFrame();
         }
         
         updateInput();
+        draw();
+    }
+    
+    @Override
+    public void draw() {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, getWidth(), getHeight());
+
+        if (town != null) {
+            town.draw(gc);
+        }
+
+        canvas.draw();
     }
 }

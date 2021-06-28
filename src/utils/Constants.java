@@ -55,8 +55,8 @@ public final class Constants {
     // End pipoya defines
     
     // The HITS2 defines
-    public static final boolean USING_HITS2 = true;
-    public static final String HITS2_PATH = ATTACK_ANIMATIONS_PATH + "Hits2 Animations/";
+    public static final boolean USING_SINESTESIA = true;
+    public static final String SINESTESIA_PATH = ATTACK_ANIMATIONS_PATH + "Sinestesia/Hits2 Animations/";
     // end HITS2 defines
 
     // The VNHex defines

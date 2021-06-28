@@ -20,14 +20,14 @@ import dfsim.*;
 
 // Sprite handlers for specific artists, sets up the sprites with indeces and parameters
 // for each one.  Alternatively I could use some kind of key index text file in the future.
-public final class SpriteHandler_Hits2 {
+public final class SpriteHandler_Sinestesia {
 
     // Various Natural Hex Tile Set
-    private SpriteHandler_Hits2() { } // private constructor
+    private SpriteHandler_Sinestesia() { } // private constructor
 
     // Set up the time fantasy monster sprites, which have already been loaded
     public static void setupAttackSprites() {
-        if (Constants.USING_HITS2 == false) {
+        if (Constants.USING_SINESTESIA == false) {
             return;
         }
 

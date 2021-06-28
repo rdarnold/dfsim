@@ -46,6 +46,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.ListProperty;
 
+import javafx.scene.canvas.*;
+
 import dfsim.*;
 import dfsim.gui.*;
 
@@ -57,6 +59,7 @@ public class HireScreen extends DfScreen {
     public HireScreen(BorderPane root, int width, int height) {
         super(root, width, height);
         thisScreen = this;
+        getMainPane().getChildren().add(canvas);
         init();
     }
 
@@ -158,5 +161,25 @@ public class HireScreen extends DfScreen {
                 DfSim.sim.onLandMapDownArrow();
                 break;*/
         }
+    }
+
+    @Override
+    public void updateOneFrame() {
+        super.updateOneFrame();
+        if (isActive() == false) {
+            return;
+        }
+
+        draw();
+    }
+    
+    @Override
+    public void draw() {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, getWidth(), getHeight());
+
+        // Any specific drawing here
+
+        canvas.draw();
     }
 }

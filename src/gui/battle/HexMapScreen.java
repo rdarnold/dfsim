@@ -22,6 +22,8 @@ import javafx.scene.control.*;
 import javafx.beans.binding.*;
 import javafx.beans.property.*;
 
+import javafx.scene.canvas.*;
+
 import dfsim.*;
 
 // Gos - Game of Systems
@@ -50,12 +52,8 @@ public class HexMapScreen extends DfScreen {
 
     public TextArea mainTextArea;
 
-    private DfCanvas canvas;
-    public DfCanvas getCanvas() { return canvas; };
-
     public HexMapScreen(BorderPane root, int wid, int hgt) {
         super(root, wid, hgt);
-        canvas = new DfCanvas(wid, hgt);
         thisScreen = this;
         createBuildingBlocks();
         createMainScene();
@@ -325,13 +323,29 @@ public class HexMapScreen extends DfScreen {
         leftListProperty.set(FXCollections.observableArrayList(leftListViewStrings));
     }
     
+    
+    @Override
     public void updateOneFrame() {
+        super.updateOneFrame();
         if (isActive() == false) {
             return;
         }
 
-        if (canvas != null) {
+        /*if (canvas != null) {
             canvas.updateOneFrame();
+        }*/
+        draw();
+    }
+
+    @Override
+    public void draw() {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, getWidth(), getHeight());
+
+        if (hexMap != null) {
+            hexMap.draw(gc);
         }
+
+        canvas.draw();
     }
 }

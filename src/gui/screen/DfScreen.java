@@ -48,12 +48,15 @@ import javafx.beans.property.ListProperty;
 
 import dfsim.*;
 
-public class DfScreen extends Scene {
+public abstract class DfScreen extends Scene {
 
     public int wid;
     public int hgt;
 
     public BorderPane overallRoot;
+
+    protected DfCanvas canvas;
+    public DfCanvas getCanvas() { return canvas; };
     
     private StackPane stackPane;
     private Pane mainPane;
@@ -94,6 +97,7 @@ public class DfScreen extends Scene {
         wid = width;
         hgt = height;
         overallRoot = root;
+        canvas = new DfCanvas(width, height);
         init();
     }
 
@@ -120,13 +124,13 @@ public class DfScreen extends Scene {
         addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
             // First process the key at this base class, like arrow keys,
             // if that does not block it, forward to subclass for screen-specific processing
-            if (processBaseKeyPress(keyEvent.getCode()) == false) {
+            if (processBaseKeyPress(keyEvent.getCode()) == true) {
                 processKeyPress(keyEvent.getCode());
             }
             keyEvent.consume();
         });
         addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> {
-            if (processBaseKeyRelease(keyEvent.getCode()) == false) {
+            if (processBaseKeyRelease(keyEvent.getCode()) == true) {
                 processKeyRelease(keyEvent.getCode());
             }
             keyEvent.consume();
@@ -225,7 +229,7 @@ public class DfScreen extends Scene {
             case S:     sPressed = true;    return true;
             case D:     dPressed = true;    return true;
         }
-        return false;
+        return true;
     }
 
     private boolean processBaseKeyRelease(KeyCode key) { 
@@ -242,6 +246,19 @@ public class DfScreen extends Scene {
             case S:     sPressed = false;    return true;
             case D:     dPressed = false;    return true;
         }
-        return false;
+        return true;
     }
+    
+    public void updateOneFrame() {
+        if (isActive() == false) {
+            return;
+        }
+
+        if (canvas != null) {
+            canvas.updateOneFrame();
+        }
+    }
+
+    // Must be overridden
+    public abstract void draw();
 }

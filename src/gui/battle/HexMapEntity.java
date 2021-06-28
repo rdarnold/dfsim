@@ -410,10 +410,8 @@ public class HexMapEntity extends MovablePolygon {
         return Constants.Ordinal.NONE;
     }
 
-    // Before we do the move, we want to turn in the right direction, etc.,
-    // maybe check something else, who knows
-    protected void onPreMoveOneTile() { 
-        switch (getMovingInOrdinal()) {
+    public void setFacingForOrdinal(Constants.Ordinal dir) {
+        switch (dir) {
             case NORTHWEST: setFacing(Constants.Dir.WEST);  break;
             case NORTH:     setFacing(Constants.Dir.NORTH); break;
             case NORTHEAST: setFacing(Constants.Dir.EAST);  break;
@@ -421,6 +419,12 @@ public class HexMapEntity extends MovablePolygon {
             case SOUTH:     setFacing(Constants.Dir.SOUTH); break;
             case SOUTHWEST: setFacing(Constants.Dir.WEST);  break;
         }
+    }
+
+    // Before we do the move, we want to turn in the right direction, etc.,
+    // maybe check something else, who knows
+    protected void onPreMoveOneTile() { 
+        setFacingForOrdinal(getMovingInOrdinal());
     }
 
     // We have now moved into the tile and we are in a new tile
@@ -452,7 +456,7 @@ public class HexMapEntity extends MovablePolygon {
         if (getHex().getNumberContains() > 1) {
             for (HexMapEntity ent : getHex().getContainsList()) {
                 if (ent != this) {
-                    ent.doAnimatedDodge(getMovingInOrdinal());
+                    ent.doAnimatedMoveAside(getMovingInOrdinal());
                 }
             }
         }
@@ -514,19 +518,19 @@ public class HexMapEntity extends MovablePolygon {
         timeline.play();
     }
     
-    // Finished with the dodge
-    private void dodgeFinished() {
+    // Finished with the move aside
+    private void moveAsideFinished() {
         setAnimating(false);
     }
 
-    public void doAnimatedDodge(Constants.Ordinal dir) {
+    public void doAnimatedMoveAside(Constants.Ordinal dir) {
         setAnimating(true);
 
         Timeline tl = new Timeline(60);
         tl.setOnFinished(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                dodgeFinished();
+                moveAsideFinished();
             }
         });
 
@@ -557,7 +561,152 @@ public class HexMapEntity extends MovablePolygon {
         tl.play();
     }
 
+    // Finished with the dodge
+    private void dodgeFinished() {
+        setAnimating(false);
+    }
+
+    // Dodge an attack coming from fromDir
+    public void doAnimatedDodge(Constants.Ordinal fromDir) {
+        setAnimating(true);
+
+        Timeline tl = new Timeline(60);
+        tl.setOnFinished(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                dodgeFinished();
+            }
+        });
+
+        double movedX = getCenterX();
+        double movedY = getCenterY();
+        double diff = 15;
+        // If the person is moving southeast, we want to dodge
+        // northeast.  Basically we dodge in the 90 degree of
+        // dir so it looks like we are moving away.
+        switch (fromDir) {
+            case NORTHWEST: movedX += diff; movedY += diff; break;
+            case NORTH:     movedY += diff; break;
+            case NORTHEAST: movedX -= diff; movedY += diff; break;
+            case SOUTHEAST: movedX -= diff; movedY -= diff; break;
+            case SOUTH:     movedY -= diff; break; // Could randomize for more flavor.
+            case SOUTHWEST: movedX += diff; movedY -= diff; break;
+            default:
+                movedY -= diff; break;
+        }
+
+        tl.getKeyFrames().addAll(
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS/3), new KeyValue(centerXProperty(), movedX)),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS/3), new KeyValue(centerYProperty(), movedY)),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS*2), new KeyValue(centerXProperty(), movedX)),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS*2), new KeyValue(centerYProperty(), movedY)),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS*3), new KeyValue(centerXProperty(), getCenterX())),
+            new KeyFrame(Duration.millis(m_nTimeIntervalMS*3), new KeyValue(centerYProperty(), getCenterY()))
+        );
+
+        tl.play();
+    }
     
+    
+    // Finished with the dodge
+    private void getHitFinished() {
+        setAnimating(false);
+    }
+
+    // Dodge an attack coming from fromDir
+    public void doAnimatedGetHit(Constants.Ordinal fromDir) {
+        setAnimating(true);
+
+        Timeline tl = new Timeline(60);
+        tl.setOnFinished(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                getHitFinished();
+            }
+        });
+
+        double diff = 5;
+        double movedX = getCenterX() - diff;
+        double movedY = getCenterY();
+        double movedX2 = getCenterX() + diff;
+        double movedY2 = getCenterY();
+        
+        // Number of times to jiggle back and forth
+        int numJiggles = 3;
+        int interval = 100;
+        int time = interval;
+
+        for (int i = 0; i < numJiggles; i++) {
+            // Basically "shuffle back and forth" if you get hit
+            tl.getKeyFrames().addAll(
+                new KeyFrame(Duration.millis(time), new KeyValue(centerXProperty(), movedX)),
+                new KeyFrame(Duration.millis(time), new KeyValue(centerYProperty(), movedY)),
+                new KeyFrame(Duration.millis(time + interval), new KeyValue(centerXProperty(), movedX2)),
+                new KeyFrame(Duration.millis(time + interval), new KeyValue(centerYProperty(), movedY2))
+            );
+            time += interval*2;
+        }
+        // Basically "shuffle back and forth" if you get hit
+        tl.getKeyFrames().addAll(
+            new KeyFrame(Duration.millis(time), new KeyValue(centerXProperty(), getCenterX())),
+            new KeyFrame(Duration.millis(time), new KeyValue(centerYProperty(), getCenterY()))
+        );
+
+        tl.play();
+    }
+    
+    // Finished with the attack
+    private void attackFinished() {
+        setAnimating(false);
+    }
+
+    // Animate the attack towards vict whatever it is, probably need to include
+    // an attack type in this or hold that data in the attacker somehow like a
+    // 'current attack' object.
+    public void doAnimatedAttack(HexMapEntity vict) {
+        setAnimating(true);
+
+        Timeline tl = new Timeline(60);
+        tl.setOnFinished(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                attackFinished();
+            }
+        });
+
+        double pixels = 10;
+        HexMapTile target = vict.getHex();
+        double tx = target.getCenterX();
+        double ty = target.getCenterY();
+        double sx = this.getCenterX();
+        double sy = this.getCenterY();
+
+        // Calculate in which dir to move in using trig.
+        /*double deltaX = tx - sx;
+        double deltaY = ty - sy;
+        double angle = Math.atan2(deltaY, deltaX); // Get the angle
+
+        // Set the new position
+        sx += pixels * Math.cos(angle);
+        sy += pixels * Math.sin(angle);*/
+        Point2D point = Utils.calcPointForMove(sx, sy, tx, ty, pixels);
+                
+        int time1MS = 100; // lunge out there
+        int time2MS = time1MS * 6; // return more slowly
+
+        // Literally just 'lurch' in the direction of vict then return.
+        tl.getKeyFrames().addAll(
+            new KeyFrame(Duration.millis(time1MS), new KeyValue(centerXProperty(), point.getX())),
+            new KeyFrame(Duration.millis(time1MS), new KeyValue(centerYProperty(), point.getY())),
+            new KeyFrame(Duration.millis(time1MS*3), new KeyValue(centerXProperty(), point.getX())),
+            new KeyFrame(Duration.millis(time1MS*3), new KeyValue(centerYProperty(), point.getY())),
+            new KeyFrame(Duration.millis(time2MS), new KeyValue(centerXProperty(), getCenterX())),
+            new KeyFrame(Duration.millis(time2MS), new KeyValue(centerYProperty(), getCenterY()))
+        );
+
+        tl.play();
+    }
+
     public boolean moveToTile(HexMapTile tile) {
         return moveToTile(tile, true);
     }
@@ -582,7 +731,35 @@ public class HexMapEntity extends MovablePolygon {
         }
         return true;
     }
+
     
+    public void die(HexMapEntity killer) {
+        animateDeath();
+    }
+    
+    private void deathFinished() {
+        setAnimating(false);
+        hexMap.removeHexMapEntity(this);
+    }
+
+    private void animateDeath() {
+        setAnimating(true);
+
+        Timeline tl = new Timeline(60);
+        tl.setOnFinished(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                deathFinished();
+            }
+        });
+
+        tl.getKeyFrames().addAll(
+            new KeyFrame(Duration.millis(1000), new KeyValue(opacityProperty(), 0))
+        );
+
+        tl.play();
+    }
+
     // Finished with the attack
     // TODO all of this
     /*private void attackFinished() {
@@ -634,6 +811,9 @@ public class HexMapEntity extends MovablePolygon {
             drawSelected(gc);
         }
 
+        // For invis, death, etc.
+        gc.setGlobalAlpha(opacityProperty().get());
+
         // Draw the sprite
         if (partyMember != null) {
             double x = getCenterX() - getSize()/2;
@@ -661,6 +841,8 @@ public class HexMapEntity extends MovablePolygon {
             //If no graphics, call base class
             super.draw(gc);
         }
+        
+        gc.setGlobalAlpha(1.0);
         
         /*gc.setLineWidth(1);
         gc.setStroke(Color.DARKGRAY);

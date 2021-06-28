@@ -77,6 +77,8 @@ public class DfSim extends Application {
     public static DunMapScreen dunMapScreen;
     public static TownMapScreen townMapScreen;
     public static PartyScreen partyScreen;
+    public static HireScreen hireScreen;
+    public static ShopScreen shopScreen;
 
     public static DialogueWindow dialogueWindow;
 
@@ -106,6 +108,8 @@ public class DfSim extends Application {
         dunMapScreen = new DunMapScreen(new BorderPane(), width, height);
         townMapScreen = new TownMapScreen(new BorderPane(), width, height);
         partyScreen = new PartyScreen(new BorderPane(), width, height);
+        hireScreen = new HireScreen(new BorderPane(), width, height);
+        shopScreen = new ShopScreen(new BorderPane(), width, height);
 
         dialogueWindow = new DialogueWindow();
 

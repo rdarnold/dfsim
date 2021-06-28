@@ -772,7 +772,7 @@ public class HexMap extends ArrayList<HexMapTile> {
             awardStats(ch, ent.mon);
 
             // And remove from game
-            removeHexMapEntity(ent);
+            ent.die(ch);
         }
         else {
             ent.hp = 0;
@@ -831,7 +831,57 @@ public class HexMap extends ArrayList<HexMapTile> {
         m_HexMapScreen.appendText("   ... is now Level " + ch.getLevel());
     }
 
-    public void doAttackAnimation(HexMapEntity ch, HexMapEntity vict) {
+    public Constants.Ordinal getOrdinalFrom(HexMapTile from, HexMapTile to) {
+        if (from == null || to == null) {
+            return Constants.Ordinal.NONE;
+        }
+        // Just calculate by x/y in case the tiles are far.
+        double xDiff = from.getCenterX() - to.getCenterX();
+        double yDiff = from.getCenterY() - to.getCenterY();
+        
+        if (xDiff <= from.getSize()) {
+            // North or southish
+            if (yDiff > 0) {
+                return Constants.Ordinal.SOUTH;
+            }
+            return Constants.Ordinal.NORTH;
+        }
+        else if (yDiff <= from.getSize()) {
+            // East or West ish
+            if (xDiff > 0) {
+                if (yDiff > 0) {
+                    return Constants.Ordinal.NORTHEAST;
+                }
+                return Constants.Ordinal.SOUTHEAST;
+            }
+            else {
+                if (yDiff > 0) {
+                    return Constants.Ordinal.NORTHWEST;
+                }
+                return Constants.Ordinal.SOUTHWEST;
+            }
+        }
+        else {
+            // One of the four quadrants
+            if (xDiff <= 0 && yDiff <= 0) {
+                return Constants.Ordinal.NORTHWEST;
+            }
+            else if (xDiff > 0 && yDiff <= 0) {
+                return Constants.Ordinal.NORTHEAST;
+            }
+            else if (xDiff <= 0 && yDiff > 0) {
+                return Constants.Ordinal.SOUTHWEST;
+            }
+            else if (xDiff > 0 && yDiff > 0) {
+                return Constants.Ordinal.SOUTHEAST;
+            }
+        }
+
+        // Shouldn't really be possible, we'd basically be on our own tile
+        return Constants.Ordinal.NONE;
+    }
+
+    public void doHitAnimation(HexMapEntity ch, HexMapEntity vict) {
         SpriteAnimation anim = GraphicsUtils.getAnimationSpriteForKey(Data.atkAnimSprites, "sword");
         if (anim != null) {
             anim.animate(m_HexMapScreen.getCanvas(), vict.getCenterX(), vict.getCenterY()); 
@@ -848,15 +898,21 @@ public class HexMap extends ArrayList<HexMapTile> {
         m_HexMapScreen.appendText(ch.getName() + " attacks...");
         m_HexMapScreen.appendText("   " + vict.getName() + "!");
         
-        doAttackAnimation(ch, vict);
+        Constants.Ordinal attackDir = getOrdinalFrom(ch.getHex(), vict.getHex());
+        ch.setFacingForOrdinal(Constants.Ordinal.revOrdinal(attackDir));
+        ch.doAnimatedAttack(vict);
+        doHitAnimation(ch, vict);
 
         // Now, calculate the hit, damage, etc.
         boolean success = hit(ch, vict);
         if (success == false) {
             m_HexMapScreen.appendText("   ... Miss!");
+            vict.doAnimatedDodge(attackDir);
             return;
         }
-            
+
+        vict.doAnimatedGetHit(attackDir);
+
         int dmg = damage(ch, vict);
         m_HexMapScreen.appendText("   ... Hit for " + dmg + " damage!");
         vict.hp -= dmg;
@@ -1461,7 +1517,6 @@ public class HexMap extends ArrayList<HexMapTile> {
         return null;
     }
 
-    //@Override
     public void draw(GraphicsContext gc) {
         // Draw all the visible tiles (tile knows if it's visible or not)
         for (HexMapTile tile : this) {

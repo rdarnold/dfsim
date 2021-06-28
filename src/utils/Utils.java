@@ -153,13 +153,19 @@ public final class Utils {
         return num;
     }
 
-    public static double getAngleDegrees(double x1, double y1, double x2, double y2) {
-        return (Utils.normalizeAngle(Math.toDegrees(getAngleRadians(x1, y1, x2, y2))));
+    // Moving from source to target at speed, provide next point
+    public static Point2D calcPointForMove(double sourceX, double sourceY, double targetX, double targetY, double speed) {
+        double angle = getAngleRadians(sourceX, sourceY, targetX, targetY);
+        return new Point2D(sourceX + speed * Math.cos(angle), sourceY += speed * Math.sin(angle));
+    }
+
+    public static double getAngleDegrees(double sourceX, double sourceY, double targetX, double targetY) {
+        return (Utils.normalizeAngle(Math.toDegrees(getAngleRadians(sourceX, sourceY, targetX, targetY))));
     }
 
     // in radians
-    public static double getAngleRadians(double x1, double y1, double x2, double y2) {
-        return (Math.atan2(y2 - y1, x2 - x1));
+    public static double getAngleRadians(double sourceX, double sourceY, double targetX, double targetY) {
+        return (Math.atan2(targetY - sourceY, targetX - sourceX));
     }
 
     public static double getAngleRadians(double xSpeed, double ySpeed) {

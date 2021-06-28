@@ -16,6 +16,9 @@ public class DfSimulator {
     public LandMapScreen landMapScreen;
     public DunMapScreen dunMapScreen;
     public TownMapScreen townMapScreen;
+    public PartyScreen partyScreen;
+    public HireScreen hireScreen;
+    public ShopScreen shopScreen;
 
     public DialogueWindow dialogueWindow;
 
@@ -51,6 +54,9 @@ public class DfSimulator {
         landMapScreen = DfSim.landMapScreen;
         townMapScreen = DfSim.townMapScreen;
         dunMapScreen = DfSim.dunMapScreen;
+        partyScreen = DfSim.partyScreen;
+        shopScreen = DfSim.shopScreen;
+        hireScreen = DfSim.hireScreen;
         hexMap = hexMapScreen.hexMap;
         landMap = landMapScreen.landMap;
         //townMap = townMapScreen.townMap;
@@ -79,6 +85,8 @@ public class DfSimulator {
                 townMapScreen.getTown().updateOneFrame();
             }
         }*/
+        // Could I just do "active scene" instead?  But I'd want it to call "up"
+        // to the superclass.
         if (dunMapScreen != null && dunMapScreen.isActive() == true) {
             dunMapScreen.updateOneFrame();
         }
@@ -87,6 +95,15 @@ public class DfSimulator {
         }
         else if (hexMapScreen != null && hexMapScreen.isActive() == true) {
             hexMapScreen.updateOneFrame();
+        }
+        else if (partyScreen != null && partyScreen.isActive() == true) {
+            partyScreen.updateOneFrame();
+        }
+        else if (hireScreen != null && hireScreen.isActive() == true) {
+            hireScreen.updateOneFrame();
+        }
+        else if (shopScreen != null && shopScreen.isActive() == true) {
+            shopScreen.updateOneFrame();
         }
         else if (landMapScreen != null) {
             landMapScreen.updateOneFrame();

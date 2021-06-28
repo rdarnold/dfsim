@@ -32,7 +32,7 @@ public class TownMap extends DfSquareMap {
     public TownMapTile[][] tiles;
 
     public TownMapAvatar avatar;
-    public ArrayList<TownMapPerson> people;
+    public ArrayList<TownMapPersonEntity> people;
 
     public boolean isInitialized() { return tilesArray != null; }
 
@@ -91,7 +91,7 @@ public class TownMap extends DfSquareMap {
     public void regen() {
         clear();
         tilesArray = new ArrayList<TownMapTile>();
-        people = new ArrayList<TownMapPerson>();
+        people = new ArrayList<TownMapPersonEntity>();
 
         // Num X and Y tiles based on size of town.
         // I should vary up the vertical and horizontal sizes.
@@ -166,7 +166,7 @@ public class TownMap extends DfSquareMap {
     }
     
     public void updateOneFrame() {
-        for (TownMapPerson pers : people) {
+        for (TownMapPersonEntity pers : people) {
             // See what happens with this mon.
             if (pers.decWait(Utils.number(500/60, 2000/60)) == true) {
                 moveTownPerson(pers);
@@ -174,7 +174,7 @@ public class TownMap extends DfSquareMap {
         }
     }
 
-    public void moveTownPerson(TownMapPerson pers) {
+    public void moveTownPerson(TownMapPersonEntity pers) {
         if (pers.canMove() == false)
             return;
         TownMapTile tile = pers.getTile();
@@ -308,7 +308,7 @@ public class TownMap extends DfSquareMap {
                 tile.moveTo(xPos, yPos);
             }
         }
-        for (TownMapPerson pers : people) {
+        for (TownMapPersonEntity pers : people) {
             pers.moveTo(pers.getTile(), Constants.Dir.SOUTH);
         }
     }
@@ -321,7 +321,7 @@ public class TownMap extends DfSquareMap {
             tile.addToPane(pane);
         }
         avatar.addToPane(pane);
-        for (TownMapPerson pers : people) {
+        for (TownMapPersonEntity pers : people) {
             pers.addToPane(pane);
         }
     }*/
@@ -338,7 +338,7 @@ public class TownMap extends DfSquareMap {
             }
         }
         if (people != null) {
-            for (TownMapPerson pers : people) {
+            for (TownMapPersonEntity pers : people) {
                 pers.removeFromPane(pane);
             }
         }
@@ -394,14 +394,46 @@ public class TownMap extends DfSquareMap {
         TownMapEntity ent = tile.getContains();
         if (ent != null) {
             if (ent.getType() == DfSquareMapEntity.EntityType.Person) {
-                TownMapPerson pers = (TownMapPerson)ent;
-                Utils.log("Interacted with " + pers.getPerson().toStringNPC());
-                pers.getPerson().setMet(true);
-                
+                TownMapPersonEntity pent = (TownMapPersonEntity)ent;
                 // Set facing; it'll always be the revdir of the char facing
-                pers.setFacing(Constants.Dir.revDir(avatar.getFacing()));
+                pent.setFacing(Constants.Dir.revDir(avatar.getFacing()));
 
-                // From the back, perhaps some options could be:
+                Person pers = pent.getPerson();
+                Utils.log("Interacted with " + pers.toStringNPC());
+                
+                // I can start to play with my random dialogue system here.  This needs
+                // to be moved into some dialogue processor class.
+                if (pers.getHasBeenMet() == false) {
+                    if (pers.getAffection() < 250) {
+                        DfSim.sim.showDialogue(pers, "Ew, go away."); 
+                    }
+                    else if (pers.getAffection() < 500) {
+                        DfSim.sim.showDialogue(pers, "Hello, nice to meet you.  I'm " + pers.getName() + "."); 
+                    }
+                    else if (pers.getAffection() < 750) {
+                        DfSim.sim.showDialogue(pers, "Oh, it's great to finally meet you!  My name is " + pers.getName() + "."); 
+                    }
+                    else {
+                        DfSim.sim.showDialogue(pers, "Wow, I've heard so much about you!  You're a hero! Oh, gosh, my name is " + pers.getName() + "."); 
+                    }
+                }
+                else {
+                    if (pers.getAffection() < 250) {
+                        DfSim.sim.showDialogue(pers, "Ew, you're the last person I wanted to see again."); 
+                    }
+                    else if (pers.getAffection() < 500) {
+                        DfSim.sim.showDialogue(pers, "Hello.  Good to see you again."); 
+                    }
+                    else if (pers.getAffection() < 750) {
+                        DfSim.sim.showDialogue(pers, "It's so great to see you again!"); 
+                    }
+                    else {
+                        DfSim.sim.showDialogue(pers, "I'd drop my panties for you in a second!"); 
+                    }
+                }
+                pers.setHasBeenMet(true);
+
+                // From the back, perhaps some options on right click could be:
                 // Talk
                 // Give
                 // Fight
@@ -464,11 +496,11 @@ public class TownMap extends DfSquareMap {
 
     }
 
-    public void onLeftClickPerson(TownMapPerson ent) {
+    public void onLeftClickPerson(TownMapPersonEntity ent) {
 
     }
 
-    public void onRightClickPerson(TownMapPerson ent) {
+    public void onRightClickPerson(TownMapPersonEntity ent) {
 
     }
 
@@ -487,7 +519,7 @@ public class TownMap extends DfSquareMap {
         DfSim.townMapScreen.updateInfoText(str);
     }
 
-    public void onMouseEnterPerson(TownMapPerson ent) {
+    public void onMouseEnterPerson(TownMapPersonEntity ent) {
         String str = ent.printInfo();
         DfSim.townMapScreen.updateInfoText(str);
     }
@@ -992,7 +1024,7 @@ public class TownMap extends DfSquareMap {
     }
 
     public boolean townPersonOnThisTile(TownMapTile tile) {
-        for (TownMapPerson pers : people) {
+        for (TownMapPersonEntity pers : people) {
             if (pers.getTile() == tile) {
                 return true;
             }
@@ -1001,7 +1033,7 @@ public class TownMap extends DfSquareMap {
     }
 
     public void placeOneTownPerson(Person person) {
-        TownMapPerson pers = new TownMapPerson(this);
+        TownMapPersonEntity pers = new TownMapPersonEntity(this);
         pers.setPerson(person);
         pers.translateXProperty().bind(xOffset);
         pers.translateYProperty().bind(yOffset);
@@ -1148,7 +1180,7 @@ public class TownMap extends DfSquareMap {
         }
         
         // Draw the mobiles
-        for (TownMapPerson p : people) {
+        for (TownMapPersonEntity p : people) {
             p.draw(gc);
         }
 

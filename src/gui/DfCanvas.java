@@ -303,19 +303,23 @@ public class DfCanvas extends Canvas {
     
     public void updateOneFrame() {
         updateAnimations();
-        draw();
+        //draw();
     }
 
+    // Huh, I kind of feel like each screen itself should draw its canvas,
+    // rather than the canvas calling "up" to elements in the screen like
+    // hexmap and squaremap.  That way the screen could do other things
+    // on the canvas that don't necessarily relate to the maps...
     public void draw() {
         GraphicsContext gc = getGraphicsContext2D();
-        gc.clearRect(0, 0, getWidth(), getHeight());
+        /*gc.clearRect(0, 0, getWidth(), getHeight());
 
         if (squareMap != null) {
             squareMap.draw(gc);
         }
         if (hexMap != null) {
             hexMap.draw(gc);
-        }
+        }*/
 
         // Draw animations
         for (SpriteAnimationInstance anim : animationList) {
